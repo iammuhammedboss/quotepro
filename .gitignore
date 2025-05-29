@@ -23,10 +23,7 @@ Thumbs.db
 __MACOSX/
 
 # Exported PDFs or temp files
-exports/
-*.pdf
-*.jpg
-*.png
+
 
 # Database dump (optional to include)
 database/quotepro.sql

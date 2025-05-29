@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clients Master | QuotePro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/clients.css">
+  <link rel="icon" href="/images/quotepro-logo.png">
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="branding">
+      <img src="/images/quotepro-logo-white.png" alt="QuotePro Logo">
+      <div class="branding-text">
+        <h1>QuotePro – Clients Master</h1>
+        <p>Logged in as: <strong><%= user?.username || 'Guest' %></strong></p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button onclick="confirmExit('/dashboard')">🏠 Dashboard</button>
+      <button onclick="confirmExit('/logout')">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('create')">➕ Create</button>
+    <button class="tab-btn" onclick="showTab('edit')">✏️ Edit</button>
+    <button class="tab-btn" onclick="showTab('search')">🔍 Search</button>
+  </div>
+
+  <!-- Create Tab -->
+  <div class="form-section active" id="create">
+    <h2>Create New Client</h2>
+    <form id="create-form">
+      <label>Client Name</label>
+      <input type="text" id="create-name" required>
+      <label>Client Phone</label>
+      <input type="text" id="create-phone" required>
+      <button type="submit">Save Client</button>
+    </form>
+  </div>
+
+  <!-- Edit Tab -->
+  <div class="form-section" id="edit">
+    <h2>Edit Client</h2>
+    <form id="edit-form" class="hidden">
+      <input type="hidden" id="edit-id">
+      <label>Client Name</label>
+      <input type="text" id="edit-name" required>
+      <label>Client Phone</label>
+      <input type="text" id="edit-phone" required>
+      <button type="submit">Update Client</button>
+      <button type="button" id="delete-client" class="btn-danger">Delete Client</button>
+    </form>
+  </div>
+
+  <!-- Search Tab -->
+  <div class="form-section" id="search">
+    <h2>Search Clients</h2>
+    <input type="text" id="search-query" placeholder="Search Clients...">
+    <div class="results" id="search-results"></div>
+    <button id="load-more">Load More</button>
+  </div>
+
+  <!-- Confirm Popup -->
+  <div id="confirm-popup" class="confirm-popup hidden">
+    <p id="confirm-message">Are you sure you want to continue?</p>
+    <div class="confirm-buttons">
+      <button id="cancel-delete">Cancel</button>
+      <button id="confirm-delete">Confirm</button>
+    </div>
+  </div>
+
+  <!-- Message Popup -->
+  <div id="popup-message" class="popup hidden"></div>
+
+  <script src="/js/clients.js"></script>
+
+</body>
+</html>

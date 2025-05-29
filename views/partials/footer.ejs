@@ -1,0 +1,64 @@
+<!-- Client Search Modal -->
+<div id="client-search-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white w-full max-w-md p-4 rounded shadow relative">
+      <input type="text" id="client-search-input" class="w-full mb-2 p-2 border rounded" placeholder="Search by name or phone" autocomplete="off">
+      <div id="client-search-results" class="max-h-64 overflow-y-auto border rounded p-2 space-y-2 text-sm"></div>
+      <button onclick="closeClientSearch()" class="absolute top-2 right-2 text-gray-500">✖</button>
+    </div>
+  </div>
+  
+  <!-- Item Description Search Modal -->
+  <div id="item-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+      <h2 class="text-lg font-bold mb-2">Search Description</h2>
+      <input type="text" id="item-search-input" class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring" placeholder="Type to search..." autocomplete="off" />
+      <div id="item-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+      <div class="flex justify-end mt-3">
+        <button onclick="closeItemSearch()" class="text-gray-500 hover:text-black">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Global unit suggestion box -->
+  <div id="unit-suggestion-box" class="absolute z-50 bg-white border rounded shadow hidden text-sm"></div>
+  
+  <!-- Scope Search Modal -->
+  <div id="scope-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+      <h2 class="text-lg font-bold mb-2">Search Scope</h2>
+      <input type="text" id="scope-search-input" class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring" placeholder="Type to search..." autocomplete="off" />
+      <div id="scope-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+      <div class="flex justify-end mt-3">
+        <button onclick="closeScopeSearch()" class="text-gray-500 hover:text-black">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Materials Search Modal -->
+  <div id="materials-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+      <h2 class="text-lg font-bold mb-2">Search Material</h2>
+      <input type="text" id="materials-search-input" class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring" placeholder="Type to search..." autocomplete="off" />
+      <div id="materials-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+      <div class="flex justify-end mt-3">
+        <button onclick="closeMaterialsSearch()" class="text-gray-500 hover:text-black">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Terms Search Modal -->
+  <div id="terms-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+      <h2 class="text-lg font-bold mb-2">Search Term</h2>
+      <input type="text" id="terms-search-input" class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring" placeholder="Type to search..." autocomplete="off" />
+      <div id="terms-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+      <div class="flex justify-end mt-3">
+        <button onclick="closeTermsSearch()" class="text-gray-500 hover:text-black">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/quotation.js" defer></script>
+  </body>
+  </html>
+  

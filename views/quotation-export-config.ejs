@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Export Quotation #<%= quotation.quotation_no %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/images/quotepro-logo.png">
+  
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    
+    .export-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #c91f1f;
+    }
+    
+    .export-section h3 {
+      color: #c91f1f;
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .export-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .export-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    
+    .export-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .export-btn.pdf {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .export-btn.pdf:hover:not(:disabled) {
+      background: #b91c1c;
+      transform: translateY(-1px);
+    }
+    
+    .export-btn.excel {
+      background: #059669;
+      color: white;
+    }
+    
+    .export-btn.excel:hover:not(:disabled) {
+      background: #047857;
+      transform: translateY(-1px);
+    }
+    
+    .export-btn.image {
+      background: #7c3aed;
+      color: white;
+    }
+    
+    .export-btn.image:hover:not(:disabled) {
+      background: #6d28d9;
+      transform: translateY(-1px);
+    }
+    
+    .export-btn.preview {
+      background: #0ea5e9;
+      color: white;
+    }
+    
+    .export-btn.preview:hover:not(:disabled) {
+      background: #0284c7;
+      transform: translateY(-1px);
+    }
+    
+    .export-btn.whatsapp {
+      background: #25d366;
+      color: white;
+    }
+    
+    .export-btn.whatsapp:hover:not(:disabled) {
+      background: #128c7e;
+      transform: translateY(-1px);
+    }
+    
+    .export-btn.email {
+      background: #f59e0b;
+      color: white;
+    }
+    
+    .export-btn.email:hover:not(:disabled) {
+      background: #d97706;
+      transform: translateY(-1px);
+    }
+    
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .loading::after {
+      content: " ⏳";
+    }
+    
+    .preview-container {
+      background: #f9fafb;
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 20px;
+      min-height: 200px;
+      display: none;
+    }
+    
+    .preview-container.show {
+      display: block;
+    }
+    
+    .preview-iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .font-size-slider {
+      width: 100%;
+      margin: 8px 0;
+    }
+    
+    .letterhead-preview {
+      width: 100px;
+      height: 60px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      margin: 4px;
+    }
+    
+    .letterhead-preview.selected {
+      border-color: #3b82f6;
+      border-width: 2px;
+    }
+    
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+      
+      .export-buttons {
+        flex-direction: column;
+      }
+      
+      .export-btn {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+<!-- Header -->
+<div class="bg-red-700 text-white px-6 py-4 flex justify-between items-center">
+  <div class="flex items-center gap-4">
+    <img src="/images/quotepro-logo-white.png" class="h-10" />
+    <div>
+      <h1 class="text-xl font-bold">QuotePro – Export Quotation</h1>
+      <p class="text-sm">by Muhammed Boss</p>
+    </div>
+  </div>
+  <div class="flex gap-3">
+    <a href="/quotations/view/<%= quotation.id %>" class="bg-white text-red-700 px-3 py-2 rounded hover:bg-gray-200 text-sm font-medium">
+      👁️ View
+    </a>
+    <a href="/dashboard" class="bg-white text-red-700 px-3 py-2 rounded hover:bg-gray-200 text-sm font-medium">
+      🏠 Dashboard
+    </a>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto p-6">
+  
+  <!-- Quotation Info -->
+  <div class="bg-white rounded-lg p-6 mb-6 shadow-sm border-l-4 border-blue-500">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">📤 Export Configuration</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div>
+        <span class="font-semibold text-gray-600">Quotation:</span>
+        <p class="text-blue-600 font-bold"><%= quotation.quotation_no %></p>
+      </div>
+      <div>
+        <span class="font-semibold text-gray-600">Client:</span>
+        <p class="text-gray-900"><%= quotation.client_name %></p>
+      </div>
+      <div>
+        <span class="font-semibold text-gray-600">Amount:</span>
+        <p class="text-green-600 font-bold">OMR <%= parseFloat(quotation.grand_total).toFixed(3) %></p>
+      </div>
+    </div>
+  </div>
+
+  <form id="export-form">
+    
+    <!-- Header Customization -->
+    <div class="export-section">
+      <h3>🎨 Header & Styling</h3>
+      
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="customHeader">Custom Header Text</label>
+          <input type="text" id="customHeader" name="customHeader" value="QUOTATION FOR WATERPROOFING" placeholder="Enter custom header text">
+          <small class="text-gray-500">E.g., "QUOTATION FOR EPOXY", "QUOTATION FOR PAINTING"</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="qrSize">QR Code Size</label>
+          <select id="qrSize" name="qrSize">
+            <option value="80">Small (80px)</option>
+            <option value="100" selected>Medium (100px)</option>
+            <option value="120">Large (120px)</option>
+            <option value="150">Extra Large (150px)</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Font Size Controls -->
+      <div class="form-group">
+        <label>Font Sizes</label>
+        <div class="grid-4">
+          <div>
+            <label for="headerFontSize" class="text-xs">Header</label>
+            <select id="headerFontSize" name="headerFontSize">
+              <option value="24px">24px</option>
+              <option value="28px" selected>28px</option>
+              <option value="32px">32px</option>
+              <option value="36px">36px</option>
+            </select>
+          </div>
+          <div>
+            <label for="bodyFontSize" class="text-xs">Body</label>
+            <select id="bodyFontSize" name="bodyFontSize">
+              <option value="12px">12px</option>
+              <option value="14px" selected>14px</option>
+              <option value="16px">16px</option>
+              <option value="18px">18px</option>
+            </select>
+          </div>
+          <div>
+            <label for="tableFontSize" class="text-xs">Table</label>
+            <select id="tableFontSize" name="tableFontSize">
+              <option value="10px">10px</option>
+              <option value="12px" selected>12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+            </select>
+          </div>
+          <div>
+            <label for="smallFontSize" class="text-xs">Small Text</label>
+            <select id="smallFontSize" name="smallFontSize">
+              <option value="9px">9px</option>
+              <option value="11px" selected>11px</option>
+              <option value="12px">12px</option>
+              <option value="13px">13px</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paper & Layout -->
+    <div class="export-section">
+      <h3>📄 Paper & Layout</h3>
+      
+      <div class="grid-3">
+        <div class="form-group">
+          <label for="paperSize">Paper Size</label>
+          <select id="paperSize" name="paperSize">
+            <option value="A4" selected>A4</option>
+            <option value="A3">A3</option>
+            <option value="Letter">Letter</option>
+            <option value="Legal">Legal</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="letterhead">Letterhead</label>
+          <select id="letterhead" name="letterhead">
+            <option value="plain" selected>Plain</option>
+            <option value="letterhead-1">Letterhead 1</option>
+            <option value="letterhead-2">Letterhead 2</option>
+            <option value="invoice">Invoice Format</option>
+            <option value="custom-1">Custom 1</option>
+            <option value="custom-2">Custom 2</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="watermark">Watermark (Optional)</label>
+          <select id="watermark" name="watermark">
+            <option value="">None</option>
+            <option value="DRAFT">DRAFT</option>
+            <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+            <option value="COPY">COPY</option>
+            <option value="SAMPLE">SAMPLE</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Margins -->
+      <div class="form-group">
+        <label>Margins</label>
+        <div class="grid-4">
+          <div>
+            <label for="marginTop" class="text-xs">Top</label>
+            <select id="marginTop" name="marginTop">
+              <option value="15mm">15mm</option>
+              <option value="20mm" selected>20mm</option>
+              <option value="25mm">25mm</option>
+              <option value="30mm">30mm</option>
+            </select>
+          </div>
+          <div>
+            <label for="marginRight" class="text-xs">Right</label>
+            <select id="marginRight" name="marginRight">
+              <option value="10mm">10mm</option>
+              <option value="15mm" selected>15mm</option>
+              <option value="20mm">20mm</option>
+              <option value="25mm">25mm</option>
+            </select>
+          </div>
+          <div>
+            <label for="marginBottom" class="text-xs">Bottom</label>
+            <select id="marginBottom" name="marginBottom">
+              <option value="15mm">15mm</option>
+              <option value="20mm" selected>20mm</option>
+              <option value="25mm">25mm</option>
+              <option value="30mm">30mm</option>
+            </select>
+          </div>
+          <div>
+            <label for="marginLeft" class="text-xs">Left</label>
+            <select id="marginLeft" name="marginLeft">
+              <option value="10mm">10mm</option>
+              <option value="15mm" selected>15mm</option>
+              <option value="20mm">20mm</option>
+              <option value="25mm">25mm</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signature & Stamp -->
+    <div class="export-section">
+      <h3>✍️ Signature & Stamp</h3>
+      
+      <div class="grid-2">
+        <div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="includeSignature" name="includeSignature">
+            <label for="includeSignature">Include Signature Section</label>
+          </div>
+          
+          <div class="form-group" id="signatureOptions" style="display: none;">
+            <label for="signatureImage">Signature Image (Optional)</label>
+            <input type="file" id="signatureImage" name="signatureImage" accept="image/*">
+            <small class="text-gray-500">Upload signature image (PNG, JPG)</small>
+          </div>
+        </div>
+        
+        <div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="includeStamp" name="includeStamp">
+            <label for="includeStamp">Include Company Stamp</label>
+          </div>
+          
+          <div id="stampOptions" style="display: none;">
+            <div class="form-group">
+              <label for="stampSize">Stamp Size</label>
+              <select id="stampSize" name="stampSize">
+                <option value="100px">Small (100px)</option>
+                <option value="120px" selected>Medium (120px)</option>
+                <option value="150px">Large (150px)</option>
+                <option value="180px">Extra Large (180px)</option>
+              </select>
+            </div>
+            
+            <div class="checkbox-group">
+              <input type="checkbox" id="manualStampPosition" name="manualStampPosition">
+              <label for="manualStampPosition">Manual Positioning</label>
+            </div>
+            
+            <div id="stampPositionControls" style="display: none;">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label for="stampTop">Top Position</label>
+                  <input type="text" id="stampTop" name="stampTop" value="200px" placeholder="e.g., 200px">
+                </div>
+                <div class="form-group">
+                  <label for="stampLeft">Left Position</label>
+                  <input type="text" id="stampLeft" name="stampLeft" value="100px" placeholder="e.g., 100px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Export Options -->
+    <div class="export-section">
+      <h3>🖼️ Image Export Options</h3>
+      
+      <div class="grid-3">
+        <div class="form-group">
+          <label for="imageFormat">Image Format</label>
+          <select id="imageFormat" name="imageFormat">
+            <option value="png" selected>PNG (High Quality)</option>
+            <option value="jpg">JPG (Smaller File)</option>
+            <option value="jpeg">JPEG (Smaller File)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="imageQuality">Image Quality</label>
+          <select id="imageQuality" name="imageQuality">
+            <option value="70">Economy (70%)</option>
+            <option value="85">Good (85%)</option>
+            <option value="90" selected>High (90%)</option>
+            <option value="95">Maximum (95%)</option>
+          </select>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="optimizeImage" name="optimizeImage" checked>
+          <label for="optimizeImage">Optimize for WhatsApp</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Integration -->
+    <div class="export-section">
+      <h3>📧 Email Integration</h3>
+      
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="emailTo">Email To</label>
+          <input type="email" id="emailTo" name="emailTo" value="<%= quotation.client_phone ? quotation.client_name.toLowerCase().replace(/\s+/g, '') + '@gmail.com' : '' %>" placeholder="client@email.com">
+        </div>
+        
+        <div class="form-group">
+          <label for="emailSubject">Email Subject</label>
+          <input type="text" id="emailSubject" name="emailSubject" value="Quotation <%= quotation.quotation_no %> - <%= quotation.client_name %>" placeholder="Email subject">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="emailBody">Email Message</label>
+        <textarea id="emailBody" name="emailBody" rows="4" placeholder="Enter email message...">Dear <%= quotation.client_name %>,
+
+Please find attached quotation <%= quotation.quotation_no %> for your review.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+International Pipes Technology Co LLC</textarea>
+      </div>
+    </div>
+
+    <!-- Export Actions -->
+    <div class="export-section">
+      <h3>🚀 Export Actions</h3>
+      
+      <!-- Preview Button -->
+      <div class="export-buttons">
+        <button type="button" class="export-btn preview" onclick="generatePreview()">
+          🔍 Preview Export
+        </button>
+      </div>
+      
+      <!-- Main Export Buttons -->
+      <div class="export-buttons">
+        <button type="button" class="export-btn pdf" onclick="exportFile('pdf')">
+          📄 Export PDF
+        </button>
+        
+        <button type="button" class="export-btn excel" onclick="exportFile('excel')">
+          📊 Export Excel
+        </button>
+        
+        <button type="button" class="export-btn image" onclick="exportFile('image')">
+          🖼️ Export Image
+        </button>
+        
+        <button type="button" class="export-btn email" onclick="exportEmail()">
+          📧 Email Client
+        </button>
+        
+        <button type="button" class="export-btn whatsapp" onclick="openWhatsApp()">
+          💬 WhatsApp
+        </button>
+      </div>
+      
+      <!-- Template Actions -->
+      <div class="export-buttons">
+        <button type="button" class="export-btn" style="background: #6b7280; color: white;" onclick="saveTemplate()">
+          💾 Save Template
+        </button>
+        
+        <button type="button" class="export-btn" style="background: #6b7280; color: white;" onclick="loadTemplate()">
+          📁 Load Template
+        </button>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- Preview Container -->
+  <div id="previewContainer" class="preview-container">
+    <h3 class="text-lg font-semibold mb-4">📋 Export Preview</h3>
+    <iframe id="previewFrame" class="preview-iframe"></iframe>
+  </div>
+
+</div>
+
+<script>
+// 🔥 Export Configuration JavaScript
+
+// Toggle signature options
+document.getElementById('includeSignature').addEventListener('change', function() {
+  document.getElementById('signatureOptions').style.display = this.checked ? 'block' : 'none';
+});
+
+// Toggle stamp options
+document.getElementById('includeStamp').addEventListener('change', function() {
+  document.getElementById('stampOptions').style.display = this.checked ? 'block' : 'none';
+});
+
+// Toggle stamp position controls
+document.getElementById('manualStampPosition').addEventListener('change', function() {
+  document.getElementById('stampPositionControls').style.display = this.checked ? 'block' : 'none';
+});
+
+// Get form data
+function getExportSettings() {
+  const formData = new FormData(document.getElementById('export-form'));
+  const settings = {};
+  
+  for (let [key, value] of formData.entries()) {
+    settings[key] = value;
+  }
+  
+  // Add checkboxes
+  settings.includeSignature = document.getElementById('includeSignature').checked;
+  settings.includeStamp = document.getElementById('includeStamp').checked;
+  settings.manualStampPosition = document.getElementById('manualStampPosition').checked;
+  settings.optimizeImage = document.getElementById('optimizeImage').checked;
+  
+  return settings;
+}
+
+// Generate Preview
+async function generatePreview() {
+  const previewBtn = document.querySelector('.export-btn.preview');
+  const originalText = previewBtn.textContent;
+  
+  try {
+    previewBtn.classList.add('loading');
+    previewBtn.textContent = 'Generating Preview...';
+    
+    const settings = getExportSettings();
+    
+    const response = await fetch(`/quotations/export/<%= quotation.id %>/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(settings)
+    });
+    
+    if (response.ok) {
+      const html = await response.text();
+      document.getElementById('previewFrame').srcdoc = html;
+      document.getElementById('previewContainer').classList.add('show');
+      
+      // Scroll to preview
+      document.getElementById('previewContainer').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      throw new Error('Preview generation failed');
+    }
+    
+  } catch (error) {
+    console.error('Preview error:', error);
+    alert('Failed to generate preview. Please try again.');
+  } finally {
+    previewBtn.classList.remove('loading');
+    previewBtn.textContent = originalText;
+  }
+}
+
+// Export File
+async function exportFile(format) {
+  const exportBtn = document.querySelector(`.export-btn.${format}`);
+  const originalText = exportBtn.textContent;
+  
+  try {
+    exportBtn.classList.add('loading');
+    exportBtn.disabled = true;
+    
+    const settings = getExportSettings();
+    settings.imageFormat = document.getElementById('imageFormat').value;
+    
+    const response = await fetch(`/quotations/export/<%= quotation.id %>/${format}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(settings)
+    });
+    
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Get filename from response header or generate one
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `quotation-<%= quotation.quotation_no %>.${format}`;
+      
+      if (contentDisposition) {
+        const matches = /filename="([^"]*)"/.exec(contentDisposition);
+        if (matches) filename = matches[1];
+      }
+      
+      // Trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showMessage(`${format.toUpperCase()} export completed successfully! 🎉`, 'success');
+    } else {
+      throw new Error(`${format} export failed`);
+    }
+    
+  } catch (error) {
+    console.error(`${format} export error:`, error);
+    alert(`Failed to export ${format.toUpperCase()}. Please try again.`);
+  } finally {
+    exportBtn.classList.remove('loading');
+    exportBtn.disabled = false;
+    exportBtn.textContent = originalText;
+  }
+}
+
+// Export via Email
+async function exportEmail() {
+  const emailBtn = document.querySelector('.export-btn.email');
+  const originalText = emailBtn.textContent;
+  
+  try {
+    emailBtn.classList.add('loading');
+    emailBtn.disabled = true;
+    
+    const settings = getExportSettings();
+    settings.emailTo = document.getElementById('emailTo').value;
+    settings.emailSubject = document.getElementById('emailSubject').value;
+    settings.emailBody = document.getElementById('emailBody').value;
+    settings.exportFormat = 'pdf'; // Default to PDF for email
+    
+    if (!settings.emailTo) {
+      alert('Please enter an email address');
+      return;
+    }
+    
+    const response = await fetch(`/quotations/export/<%= quotation.id %>/email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(settings)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Open email client
+      window.location.href = result.mailtoLink;
+      
+      // Also trigger download of the attachment
+      setTimeout(() => {
+        window.open(result.downloadUrl, '_blank');
+      }, 1000);
+      
+      showMessage('Email client opened! Download the attachment separately.', 'info');
+    } else {
+      throw new Error(result.error || 'Email preparation failed');
+    }
+    
+  } catch (error) {
+    console.error('Email export error:', error);
+    alert('Failed to prepare email. Please try again.');
+  } finally {
+    emailBtn.classList.remove('loading');
+    emailBtn.disabled = false;
+    emailBtn.textContent = originalText;
+  }
+}
+
+// Open WhatsApp Integration
+function openWhatsApp() {
+  window.open(`/quotations/export/<%= quotation.id %>/whatsapp`, '_blank');
+}
+
+// Save Template
+function saveTemplate() {
+  const templateName = prompt('Enter template name:');
+  if (!templateName) return;
+  
+  const settings = getExportSettings();
+  
+  fetch('/quotations/export/save-template', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      templateName: templateName,
+      templateSettings: settings
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      showMessage(`Template "${templateName}" saved successfully! 💾`, 'success');
+    } else {
+      throw new Error(result.error);
+    }
+  })
+  .catch(error => {
+    console.error('Template save error:', error);
+    alert('Failed to save template. Please try again.');
+  });
+}
+
+// Load Template (placeholder - would need template list)
+function loadTemplate() {
+  alert('Template loading feature coming soon! 🚀');
+}
+
+// Show message function
+function showMessage(message, type = 'success') {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 ${
+    type === 'success' ? 'bg-green-500' : type === 'info' ? 'bg-blue-500' : 'bg-red-500'
+  }`;
+  messageDiv.textContent = message;
+  
+  document.body.appendChild(messageDiv);
+  
+  setTimeout(() => {
+    messageDiv.remove();
+  }, 4000);
+}
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Export configuration initialized');
+  
+  // Auto-generate email if client phone exists
+  const clientPhone = '<%= quotation.client_phone || "" %>';
+  if (clientPhone && !document.getElementById('emailTo').value) {
+    // Try to generate an email based on client name
+    const clientName = '<%= quotation.client_name %>';
+    const emailSuggestion = clientName.toLowerCase().replace(/\s+/g, '.') + '@gmail.com';
+    document.getElementById('emailTo').placeholder = emailSuggestion;
+  }
+});
+</script>
+
+</body>
+</html>

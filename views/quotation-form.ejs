@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= mode === 'edit' ? 'Edit Quotation' : 'Create Quotation' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/images/quotepro-logo.png">
+</head>
+<body class="bg-gray-100 font-[Outfit]">
+
+<!-- 🔴 TOPBAR -->
+<div class="bg-red-700 text-white px-6 py-4 flex justify-between items-center">
+  <div class="flex items-center gap-4">
+    <img src="/images/quotepro-logo-white.png" class="h-10" />
+    <div>
+      <h1 class="text-xl font-bold">QuotePro – <%= mode === 'edit' ? 'Edit' : 'Create' %> Quotation</h1>
+      <p class="text-sm">by Muhammed Boss</p>
+    </div>
+  </div>
+  <a href="/dashboard" class="bg-white text-red-700 px-4 py-2 rounded hover:bg-gray-200">🏠 Dashboard</a>
+</div>
+
+<!-- 🧾 FORM -->
+<div class="max-w-6xl mx-auto bg-white p-6 my-6 rounded shadow">
+  <form method="POST" action="<%= mode === 'edit' ? '/quotations/update/' + quotation.id : '/save-quotation' %>" id="quotation-form" class="space-y-6" autocomplete="off">
+
+    <!-- BASIC INFO -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="block font-medium mb-1">Quotation No</label><input type="text" id="quotation_no" name="quotation_no" value="<%= quotation.quotation_no || '' %>" readonly class="w-full border rounded px-3 py-2"/></div>
+      <div><label class="block font-medium mb-1">Date</label><input type="date" name="tdate" value="<%= mode === 'edit' ? quotation.tdate.toISOString().split('T')[0] : new Date().toISOString().slice(0,10) %>" class="w-full border rounded px-3 py-2"/></div>
+    </div>
+
+    <!-- CLIENT -->
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Client Name -->
+      <div>
+        <label for="client-name">Client Name</label>
+        <div class="relative">
+          <input
+            type="text"
+            id="client-name"
+            name="client_name"
+            value="<%= mode === 'edit' ? quotation.client_name : '' %>"
+            class="w-full border border-gray-300 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Client Name"
+          >
+          <button type="button"
+            onclick="openClientSearch()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+            🔍
+          </button>
+        </div>
+      </div>
+    
+      <!-- Client Phone -->
+      <div>
+        <label for="client-phone">Client Phone</label>
+        <div class="relative">
+          <input
+            type="text"
+            id="client-phone"
+            name="client_phone"
+            value="<%= mode === 'edit' ? quotation.client_phone : '' %>"
+            class="w-full border border-gray-300 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Client Phone"
+          >
+          <button type="button"
+            onclick="openClientSearch()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+            🔍
+          </button>
+        </div>
+      </div>
+    </div>
+    
+<!-- Section Toggles -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 mb-2">
+  <% ["contractor", "subcontractor", "engineer", "attention"].forEach(type => {
+    const hasData = mode === 'edit' && (quotation[type + '_name'] || quotation[type + '_phone']);
+  %>
+    <label class="inline-flex items-center">
+      <input
+        type="checkbox"
+        class="mr-2 toggle-section"
+        data-target="<%= type %>-section"
+        <%= hasData ? 'checked' : '' %>
+      />
+      Add <%= type.charAt(0).toUpperCase() + type.slice(1) %>
+    </label>
+  <% }); %>
+</div>
+
+    <!-- OPTIONAL SECTIONS -->
+    <% ["contractor", "subcontractor", "engineer", "attention"].forEach(type => { 
+  const labelCap = type.charAt(0).toUpperCase() + type.slice(1);
+  const hasData = mode === 'edit' && (quotation[type + '_name'] || quotation[type + '_phone']);
+%>
+   <div id="<%= type %>-section" class="grid grid-cols-1 md:grid-cols-2 gap-4 <%= hasData ? '' : 'hidden' %>">
+     <!-- Name -->
+     <div>
+       <label class="block font-medium"><%= labelCap %> Name</label>
+       <div class="relative">
+         <input
+           type="text"
+           id="<%= type %>-name"
+           name="<%= type %>_name"
+           class="w-full border border-gray-300 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+           placeholder="<%= labelCap %> Name"
+           value="<%= mode === 'edit' ? quotation[type + '_name'] : '' %>"
+         >
+         <button type="button"
+           onclick="openClientSearch('<%= type %>-name', '<%= type %>-phone')"
+           class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+           🔍
+         </button>
+       </div>
+     </div>
+ 
+     <!-- Phone -->
+     <div>
+       <label class="block font-medium"><%= labelCap %> Phone</label>
+       <div class="relative">
+         <input
+           type="text"
+           id="<%= type %>-phone"
+           name="<%= type %>_phone"
+           class="w-full border border-gray-300 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+           placeholder="<%= labelCap %> Phone"
+           value="<%= mode === 'edit' ? quotation[type + '_phone'] : '' %>"
+         >
+         <button type="button"
+           onclick="openClientSearch('<%= type %>-name', '<%= type %>-phone')"
+           class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+           🔍
+         </button>
+       </div>
+     </div>
+   </div>
+ <% }); %>
+
+ <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+  <div class="md:col-span-2">
+    <label class="block font-medium mb-1">Project Location</label>
+    <textarea name="project_location" rows="2" class="w-full border rounded px-3 py-2 resize-none"><%= mode === 'edit' ? quotation.project_location : '' %></textarea>
+  </div>
+</div>
+
+    <!-- REFERENCE -->
+    <div><label><input type="checkbox"
+  class="mr-2 toggle-section"
+  data-target="reference-section"
+  <%= mode === 'edit' && (quotation.ref_no || quotation.ref_date) ? 'checked' : '' %> />
+ Add Reference Info</label></div>
+    <div id="reference-section" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+      <div><label class="block font-medium">Reference No</label><input type="text" name="ref_no" value="<%= mode === 'edit' ? quotation.ref_no : '' %>" class="w-full border rounded px-3 py-2"/></div>
+      <div><label class="block font-medium">Reference Date</label><input type="date" name="ref_date" value="<%= mode === 'edit' ? quotation.ref_date?.toISOString().split('T')[0] : '' %>" class="w-full border rounded px-3 py-2"/></div>
+    </div>
+
+    <!-- ADDITIONAL DESC -->
+    <div><label><input type="checkbox"
+  class="mr-2 toggle-section"
+  data-target="description-box"
+  <%= mode === 'edit' && quotation.description ? 'checked' : '' %> />
+ Add Additional Description</label><textarea name="description" id="description-box" class="w-full border rounded px-3 py-2 mt-2 hidden"><%= mode === 'edit' ? quotation.description : '' %></textarea></div>
+
+    <hr class="my-6 border-t border-gray-300" />
+
+    <!-- ✅ ITEMS SECTION WITH FIXED AUTO SL -->
+    <h3 class="text-xl font-semibold">Quotation Items</h3>
+    <label class="text-sm"><input type="checkbox" id="toggle-items-sl" checked class="mr-2" /> Auto SL No</label>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border text-sm mt-2">
+        <thead class="bg-gray-100"><tr><th class="border p-2 w-10">SL</th><th class="border p-2">Description</th><th class="border p-2 w-20">Qty</th><th class="border p-2 w-20">Unit</th><th class="border p-2 w-24">Rate</th><th class="border p-2 w-24">Amount</th><th class="border p-2 w-10">❌</th></tr></thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+<button type="button" id="add-item-btn" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">+ Add Row</button>
+
+    <input type="hidden" name="items" id="items-json">
+    <input type="hidden" name="scope" id="scope-json">
+    <input type="hidden" name="materials" id="materials-json">
+    <input type="hidden" name="terms" id="terms-json">
+    
+
+  <!-- SUMMARY -->
+  <div class="grid gap-2 max-w-sm ml-auto text-sm">
+    <div class="flex justify-between items-center">
+      <label>Total Amount</label>
+      <div class="relative w-40">
+        <input type="number" id="total_amount" name="total_amount" value="<%= mode === 'edit' ? quotation.total_amount : '0.000' %>" readonly class="w-full border px-2 py-1 pr-10 rounded text-right" />
+        <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-500">OMR</span>
+      </div>
+    </div>
+    <div class="flex justify-between items-center">
+      <label>Discount</label>
+      <div class="relative w-40">
+        <input type="number" id="discount" name="discount" value="<%= mode === 'edit' ? quotation.discount : '0.000' %>" class="w-full border px-2 py-1 pr-10 rounded text-right" />
+        <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-500">OMR</span>
+      </div>
+    </div>
+    <div class="flex justify-between items-center">
+      <label>VAT</label>
+      <div class="relative w-40">
+        <input type="number" id="vat_rate" name="vat_rate" value="<%= mode === 'edit' ? quotation.vat_rate : '5.000' %>" class="w-full border px-2 py-1 pr-10 rounded text-right" />
+        <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-500">%</span>
+      </div>
+    </div>
+    <div class="flex justify-between items-center">
+      <label>VAT Amount</label>
+      <div class="relative w-40">
+        <input type="number" id="vat_amount" name="vat_amount" value="<%= mode === 'edit' ? quotation.vat_amount : '0.000' %>" readonly class="w-full border px-2 py-1 pr-10 rounded text-right" />
+        <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-500">OMR</span>
+      </div>
+    </div>
+    <div class="flex justify-between items-center">
+      <label>Round Off</label>
+      <div class="relative w-40">
+        <input type="number" id="round_off" name="round_off" value="<%= mode === 'edit' ? quotation.round_off : '0.000' %>" class="w-full border px-2 py-1 pr-10 rounded text-right" />
+        <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-500">OMR</span>
+      </div>
+    </div>
+    <div class="flex justify-between items-center font-semibold text-base border-t pt-2 mt-1">
+      <label>Grand Total</label>
+      <div class="relative w-40">
+        <input type="number" id="grand_total" name="grand_total" value="<%= mode === 'edit' ? quotation.grand_total : '0.000' %>" readonly class="w-full border px-2 py-1 pr-10 rounded text-right font-semibold" />
+        <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-800 font-bold">OMR</span>
+      </div>
+    </div>
+  </div>
+  
+   <!-- ✅ SCOPE SECTION WITH FIXED AUTO SL -->
+<div>
+  <label>
+    <input type="checkbox"
+    class="mr-2 toggle-section"
+    data-target="scope-wrapper"
+    <%= mode === 'edit' && scope?.length > 0 && scope.some(item => item && item.trim()) ? 'checked' : '' %> />
+    Add Scope of Work
+  </label>
+  <div id="scope-wrapper" class="<%= mode === 'edit' && scope?.length > 0 && scope.some(item => item && item.trim()) ? '' : 'hidden' %> mt-4">
+    <div class="flex items-center justify-between mb-2">
+      <label class="font-semibold text-lg">Scope of Work</label>
+      <label class="text-sm"><input type="checkbox" id="toggle-scope-sl" name="show_scope_slno" checked class="mr-2" /> Auto SL No</label>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border p-2 w-10 sl-col sl-scope">SL</th>
+            <th class="border p-2 scope-col" colspan="1">Scope</th>
+            <th class="border p-2 w-10">❌</th>
+          </tr>
+        </thead>        
+        <tbody id="scope-body"></tbody>
+      </table>
+    </div>
+    <button type="button" id="add-scope-btn" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">+ Add Row</button>
+  </div>
+</div>
+
+<!-- ✅ MATERIALS SECTION WITH FIXED AUTO SL -->
+<div class="mt-6">
+  <label>
+    <input type="checkbox"
+    class="mr-2 toggle-section"
+    data-target="materials-wrapper"
+    <%= mode === 'edit' && materials?.length > 0 && materials.some(item => item && item.trim()) ? 'checked' : '' %> />
+    Add Materials
+  </label>
+  <div id="materials-wrapper" class="<%= mode === 'edit' && materials?.length > 0 && materials.some(item => item && item.trim()) ? '' : 'hidden' %> mt-4">
+    <div class="flex items-center justify-between mb-2">
+      <label class="font-semibold text-lg">Materials</label>
+      <label class="text-sm"><input type="checkbox" id="toggle-materials-sl" name="show_material_slno" checked class="mr-2" /> Auto SL No</label>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border p-2 w-10 sl-col sl-materials">SL</th>
+            <th class="border p-2 materials-col" colspan="1">Material</th>
+            <th class="border p-2 w-10">❌</th>
+          </tr>
+        </thead>
+        <tbody id="materials-body"></tbody>
+      </table>
+    </div>
+    <button type="button" id="add-materials-btn" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">+ Add Row</button>
+  </div>
+</div>
+
+<!-- ✅ TERMS SECTION WITH FIXED AUTO SL -->
+<div class="mt-6">
+  <label>
+    <input type="checkbox"
+    class="mr-2 toggle-section"
+    data-target="terms-wrapper"
+    <%= mode === 'edit' && terms?.length > 0 && terms.some(item => item && item.trim()) ? 'checked' : '' %> />
+    Add Terms & Conditions
+  </label>
+  <div id="terms-wrapper" class="<%= mode === 'edit' && terms?.length > 0 && terms.some(item => item && item.trim()) ? '' : 'hidden' %> mt-4">
+    <div class="flex items-center justify-between mb-2">
+      <label class="font-semibold text-lg">Terms & Conditions</label>
+      <label class="text-sm"><input type="checkbox" id="toggle-terms-sl" name="show_term_slno" checked class="mr-2" /> Auto SL No</label>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border p-2 w-10 sl-col sl-terms">SL</th>
+            <th class="border p-2 terms-col" colspan="1">Term</th>
+            <th class="border p-2 w-10">❌</th>
+          </tr>
+        </thead>
+        <tbody id="terms-body"></tbody>
+      </table>
+    </div>
+    <button type="button" id="add-terms-btn" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">+ Add Row</button>
+  </div>
+</div>
+
+    <!-- WARRANTY -->
+    <h3 class="text-xl font-semibold mt-6">Warranty</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label>Warranty Period (Years)</label><select name="warranty" class="w-full border px-3 py-2 rounded"><% for (let i = 1; i <= 100; i++) { %><option value="<%= i %>" <%= (mode === 'edit' && quotation.warranty == i) || (mode !== 'edit' && i === 10) ? 'selected' : '' %>><%= i %> Years</option><% } %></select></div>
+    </div>
+    <div class="mt-2"><label><input type="checkbox"
+  class="mr-2 toggle-section"
+  data-target="warranty-note-box"
+  <%= mode === 'edit' && quotation.warranty_note ? 'checked' : '' %> />
+ Add Additional Warranty Note</label><textarea name="warranty_note" id="warranty-note-box" class="w-full border rounded px-3 py-2 mt-2 hidden"><%= mode === 'edit' ? quotation.warranty_note : '' %></textarea></div>
+
+    <!-- ✅ SUBMIT BUTTONS WITH DELETE FOR EDIT MODE -->
+    <div class="text-center mt-6 space-y-4">
+      <% if (mode === 'edit') { %>
+        <!-- Edit Mode: Save + Delete buttons -->
+        <div class="flex justify-center gap-4">
+          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded text-lg font-medium">
+            Update Quotation
+          </button>
+          <button type="button" onclick="showDeleteConfirmation()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded text-lg font-medium">
+            Delete Quotation
+          </button>
+        </div>
+      <% } else { %>
+        <!-- Create Mode: Save button only -->
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded text-lg font-medium">
+          Save Quotation
+        </button>
+      <% } %>
+    </div>
+  </form>
+</div>
+
+<!-- ✅ UNSAVED CHANGES WARNING POPUP -->
+<div id="unsaved-changes-popup" class="confirm-popup hidden">
+  <div class="text-center">
+    <div class="text-6xl mb-4">⚠️</div>
+    <p id="unsaved-changes-message" class="mb-4 font-bold">You have unsaved changes!</p>
+    <p class="text-gray-600 mb-6">Are you sure you want to leave? All your changes will be lost.</p>
+    <div class="confirm-buttons">
+      <button id="stay-on-page" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+        Stay on Page
+      </button>
+      <button id="leave-page" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+        Leave Anyway
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ DELETE CONFIRMATION POPUP -->
+<div id="delete-quotation-popup" class="confirm-popup hidden">
+  <div class="text-center">
+    <div class="text-6xl mb-4">⚠️</div>
+    <h2 class="text-xl font-bold mb-2">Delete Quotation</h2>
+    <p class="text-gray-600 mb-4">Are you sure you want to delete this quotation?</p>
+    <div class="bg-gray-50 p-3 rounded mb-4">
+      <p class="font-medium"><%= mode === 'edit' ? quotation.quotation_no : 'Current Quotation' %></p>
+      <% if (mode === 'edit') { %>
+        <p class="text-sm text-gray-600"><%= quotation.client_name || 'No client' %></p>
+        <p class="text-sm text-gray-600">OMR <%= parseFloat(quotation.grand_total || 0).toFixed(3) %></p>
+      <% } %>
+    </div>
+    <p class="text-red-600 text-sm mb-6">This action cannot be undone.</p>
+    <div class="confirm-buttons">
+      <button onclick="closeDeleteConfirmation()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+        Cancel
+      </button>
+      <button onclick="confirmDeleteQuotation()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+        Delete Quotation
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ ADD POPUP STYLES TO THE HEAD SECTION -->
+<style>
+  /* Popup Styles - Matching delete popup design */
+  .confirm-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    z-index: 9999;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+  }
+
+  .confirm-popup.hidden {
+    display: none;
+  }
+
+  .confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .confirm-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  /* Form change detection */
+  .form-changed {
+    border-left: 4px solid #f59e0b !important;
+  }
+</style>
+
+<!-- Client Search Modal -->
+<div id="client-search-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white w-full max-w-md p-4 rounded shadow relative">
+    <input type="text" id="client-search-input" class="w-full mb-2 p-2 border rounded" placeholder="Search by name or phone" autocomplete="off">
+    <div id="client-search-results" class="max-h-64 overflow-y-auto border rounded p-2 space-y-2 text-sm">
+      <!-- Search results will appear here -->
+    </div>
+    <button onclick="closeClientSearch()" class="absolute top-2 right-2 text-gray-500">✖</button>
+  </div>
+</div>
+
+<!-- Item Description Search Modal -->
+<div id="item-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+  <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+    <h2 class="text-lg font-bold mb-2">Search Description</h2>
+    <input
+      type="text"
+      id="item-search-input"
+      class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring"
+      placeholder="Type to search..."
+      autocomplete="off"
+    />
+    <div id="item-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+    <div class="flex justify-end mt-3">
+      <button onclick="closeItemSearch()" class="text-gray-500 hover:text-black">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Global unit suggestion box -->
+<div id="unit-suggestion-box" class="absolute z-50 bg-white border rounded shadow hidden text-sm"></div>
+
+<!-- Scope Search Modal -->
+<div id="scope-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+  <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+    <h2 class="text-lg font-bold mb-2">Search Scope</h2>
+    <input
+      type="text"
+      id="scope-search-input"
+      class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring"
+      placeholder="Type to search..."
+      autocomplete="off"
+    />
+    <div id="scope-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+    <div class="flex justify-end mt-3">
+      <button onclick="closeSearchModal('scope')" class="text-gray-500 hover:text-black">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Materials Search Modal -->
+<div id="materials-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+  <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+    <h2 class="text-lg font-bold mb-2">Search Material</h2>
+    <input
+      type="text"
+      id="materials-search-input"
+      class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring"
+      placeholder="Type to search..."
+      autocomplete="off"
+    />
+    <div id="materials-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+    <div class="flex justify-end mt-3">
+      <button onclick="closeSearchModal('materials')" class="text-gray-500 hover:text-black">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Terms Search Modal -->
+<div id="terms-search-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+  <div class="bg-white w-full max-w-2xl rounded shadow-lg p-4 relative">
+    <h2 class="text-lg font-bold mb-2">Search Term</h2>
+    <input
+      type="text"
+      id="terms-search-input"
+      class="w-full border px-3 py-2 mb-2 rounded focus:outline-none focus:ring"
+      placeholder="Type to search..."
+      autocomplete="off"
+    />
+    <div id="terms-search-results" class="max-h-64 overflow-y-auto border rounded"></div>
+    <div class="flex justify-end mt-3">
+      <button onclick="closeSearchModal('terms')" class="text-gray-500 hover:text-black">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add this script BEFORE loading the JavaScript files -->
+<script>
+// ✅ PASS SERVER DATA TO JAVASCRIPT
+window.serverItems = <%- JSON.stringify(items || []) %>;
+window.serverScope = <%- JSON.stringify(scope || []) %>;
+window.serverMaterials = <%- JSON.stringify(materials || []) %>;
+window.serverTerms = <%- JSON.stringify(terms || []) %>;
+
+console.log('📦 Server data loaded:');
+console.log('Items:', window.serverItems);
+console.log('Scope:', window.serverScope);
+console.log('Materials:', window.serverMaterials);
+console.log('Terms:', window.serverTerms);
+</script>
+
+<!-- ✅ LOAD ALL SCRIPTS IN CORRECT ORDER -->
+<!-- Core functionality (base requirements) -->
+<script src="/js/quotation-autogrow.js"></script>
+<script src="/js/quotation-form-base.js"></script>
+
+<!-- Change detection -->
+<script src="/js/quotation-form-change-detection.js"></script>
+
+<!-- Form submission and navigation -->
+<script src="/js/quotation-form-submit.js"></script>
+
+<!-- Client and search functionality -->
+<script src="/js/quotation-form-client-search.js"></script>
+
+<!-- Items section -->
+<script src="/js/quotation-form-items.js"></script>
+<script src="/js/quotation-form-items-search.js"></script>
+<script src="/js/quotation-form-units.js"></script>
+
+<!-- Scope section -->
+<script src="/js/quotation-form-scope.js"></script>
+<script src="/js/quotation-form-scope-search.js"></script>
+
+<!-- Materials section -->
+<script src="/js/quotation-form-materials.js"></script>
+<script src="/js/quotation-form-materials-search.js"></script>
+
+<!-- Terms section -->
+<script src="/js/quotation-form-terms.js"></script>
+<script src="/js/quotation-form-terms-search.js"></script>
+
+<!-- Summary calculations -->
+<script src="/js/quotation-form-summary.js"></script>
+
+</body>
+</html>

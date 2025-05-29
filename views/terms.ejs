@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms & Conditions Master</title>
+  <link rel="stylesheet" href="/css/clients.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 🔴 Top Bar -->
+  <div class="topbar">
+    <div class="branding">
+      <img src="/images/quotepro-logo-white.png" alt="Logo" />
+      <div class="branding-text">
+        <h1>QuotePro – Terms & Conditions Master</h1>
+        <p>Logged in as: <strong><%= user?.username || 'Guest' %></strong></p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button onclick="confirmExit('/dashboard')">🏠 Dashboard</button>
+      <button onclick="window.location.href='/logout'">📜 Logout</button>
+    </div>
+  </div>
+
+  <!-- 🟠 Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('create')">➕ Create</button>
+    <button class="tab-btn" onclick="showTab('edit')">✏️ Edit</button>
+    <button class="tab-btn" onclick="showTab('search')">🔍 Search</button>
+  </div>
+
+  <!-- 🟢 Create Term -->
+  <div id="create" class="form-section active">
+    <h2>Create Term</h2>
+    <form id="create-form">
+      <label>Term & Condition</label>
+      <input type="text" id="create-term" required />
+      <button type="submit">Save</button>
+    </form>
+  </div>
+
+  <!-- 🔵 Search Terms -->
+  <div id="search" class="form-section">
+    <h2>Search Terms</h2>
+    <input type="text" id="search-query" placeholder="Search terms..." />
+    <div class="results" id="search-results"></div>
+    <button id="load-more">Load More</button>
+  </div>
+
+  <!-- 🟣 Edit Term -->
+  <div id="edit" class="form-section hidden">
+    <h2>Edit Term</h2>
+    <form id="edit-form">
+      <input type="hidden" id="edit-id" />
+      <label>Term & Condition</label>
+      <input type="text" id="edit-term" required />
+      <button type="submit">Update</button>
+      <button type="button" class="btn-danger" id="delete-term">Delete</button>
+    </form>
+  </div>
+
+  <!-- ⚠️ Popups -->
+  <div id="popup-message" class="popup hidden"></div>
+  <div id="confirm-popup" class="confirm-popup hidden">
+    <p id="confirm-message">Are you sure you want to continue?</p>
+    <div class="confirm-buttons">
+      <button id="cancel-delete">Cancel</button>
+      <button id="confirm-delete">Continue</button>
+    </div>
+  </div>
+
+  <script src="/js/terms.js"></script>
+</body>
+</html>

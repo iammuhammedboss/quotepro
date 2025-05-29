@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quotation #<%= quotation.quotation_no %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --header-font-size: <%= exportSettings.headerFontSize || '28px' %>;
+      --subheader-font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
+      --body-font-size: <%= exportSettings.bodyFontSize || '14px' %>;
+      --table-font-size: <%= exportSettings.tableFontSize || '12px' %>;
+      --small-font-size: <%= exportSettings.smallFontSize || '11px' %>;
+    }
+    
+    body { 
+      font-family: 'Outfit', sans-serif; 
+      margin: 0;
+      padding: 20px;
+      background: white;
+      color: #000;
+      font-size: var(--body-font-size);
+      line-height: 1.4;
+    }
+    
+    /* Print-specific styles */
+    @media print {
+      body { margin: 0; padding: 10px; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      .page-break-avoid { page-break-inside: avoid; }
+    }
+    
+    /* Letterhead Styles */
+    <% if (exportSettings.letterhead && exportSettings.letterhead !== 'plain') { %>
+    .letterhead {
+      background-image: url('/images/letterheads/<%= exportSettings.letterhead %>.png');
+      background-repeat: no-repeat;
+      background-position: top center;
+      background-size: contain;
+      min-height: 150px;
+      padding-top: 160px;
+    }
+    <% } %>
+    
+    /* Watermark Styles */
+    <% if (exportSettings.watermark) { %>
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72px;
+      color: rgba(200, 200, 200, 0.3);
+      z-index: -1;
+      pointer-events: none;
+      font-weight: bold;
+    }
+    <% } %>
+    
+    /* Header Section */
+    .document-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+      gap: 20px;
+    }
+    
+    .header-left {
+      flex: 1;
+    }
+    
+    .header-right {
+      flex-shrink: 0;
+      text-align: right;
+    }
+    
+    .main-title {
+      font-size: var(--header-font-size);
+      font-weight: bold;
+      color: #c91f1f;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .sub-title {
+      font-size: var(--subheader-font-size);
+      font-weight: 600;
+      color: #555;
+      margin: 0 0 20px 0;
+    }
+    
+    .quote-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #c91f1f;
+    }
+    
+    .quote-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .quote-info-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .quote-info-label {
+      font-weight: 600;
+      color: #666;
+      font-size: var(--small-font-size);
+    }
+    
+    .quote-info-value {
+      font-weight: bold;
+      color: #000;
+      font-size: var(--body-font-size);
+    }
+    
+    /* QR Code */
+    .qr-code {
+      border: 2px solid #c91f1f;
+      padding: 10px;
+      border-radius: 8px;
+      background: white;
+      text-align: center;
+    }
+    
+    .qr-code img {
+      display: block;
+      margin: 0 auto 8px auto;
+    }
+    
+    .qr-code-text {
+      font-size: var(--small-font-size);
+      color: #666;
+      font-weight: 600;
+    }
+    
+    /* Client Information */
+    .client-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 25px;
+    }
+    
+    .client-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border-top: 3px solid #c91f1f;
+    }
+    
+    .client-card h3 {
+      margin: 0 0 15px 0;
+      font-size: var(--subheader-font-size);
+      color: #c91f1f;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+    }
+    
+    .client-info {
+      margin-bottom: 12px;
+    }
+    
+    .client-label {
+      font-weight: 600;
+      color: #666;
+      font-size: var(--small-font-size);
+      display: block;
+      margin-bottom: 3px;
+    }
+    
+    .client-value {
+      color: #000;
+      font-size: var(--body-font-size);
+    }
+    
+    /* Project Information */
+    .project-info {
+      background: #f0f7ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .project-info h3 {
+      margin: 0 0 15px 0;
+      color: #007bff;
+      font-size: var(--subheader-font-size);
+    }
+    
+    /* Items Table */
+    .items-section {
+      margin-bottom: 25px;
+    }
+    
+    .section-title {
+      font-size: var(--subheader-font-size);
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #c91f1f;
+    }
+    
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: var(--table-font-size);
+    }
+    
+    .items-table th {
+      background: #c91f1f;
+      color: white;
+      padding: 12px 8px;
+      text-align: center;
+      font-weight: 600;
+      border: 1px solid #a91717;
+      font-size: var(--small-font-size);
+    }
+    
+    .items-table td {
+      padding: 10px 8px;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+    
+    .items-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    .items-table .text-center { text-align: center; }
+    .items-table .text-right { text-align: right; }
+    
+    /* Summary Section */
+    .summary-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 25px;
+    }
+    
+    .summary-table {
+      width: 350px;
+      border-collapse: collapse;
+      font-size: var(--body-font-size);
+    }
+    
+    .summary-table td {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+    }
+    
+    .summary-table .summary-label {
+      background: #f8f9fa;
+      font-weight: 600;
+      text-align: left;
+      color: #666;
+    }
+    
+    .summary-table .summary-value {
+      text-align: right;
+      font-weight: 500;
+    }
+    
+    .summary-table .grand-total {
+      background: #c91f1f;
+      color: white;
+      font-weight: bold;
+      font-size: calc(var(--body-font-size) + 2px);
+    }
+    
+    /* Lists (Scope, Materials, Terms) */
+    .list-section {
+      margin-bottom: 25px;
+      page-break-avoid: auto;
+    }
+    
+    .list-items {
+      background: #fafafa;
+      padding: 15px 20px;
+      border-radius: 8px;
+      border-left: 4px solid #28a745;
+    }
+    
+    .list-item {
+      display: flex;
+      margin-bottom: 10px;
+      align-items: flex-start;
+    }
+    
+    .list-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .list-number {
+      font-weight: 600;
+      color: #28a745;
+      margin-right: 12px;
+      min-width: 20px;
+      font-size: var(--small-font-size);
+    }
+    
+    .list-text {
+      flex: 1;
+      color: #333;
+      font-size: var(--body-font-size);
+      line-height: 1.5;
+    }
+    
+    /* Warranty Section */
+    .warranty-section {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    
+    .warranty-title {
+      font-size: var(--subheader-font-size);
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .warranty-period {
+      font-size: calc(var(--header-font-size) - 4px);
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .warranty-note {
+      font-size: var(--body-font-size);
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+    
+    /* Signature Section */
+    .signature-section {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 40px;
+    }
+    
+    .signature-block {
+      text-align: center;
+      min-width: 200px;
+    }
+    
+    .signature-line {
+      border-top: 2px solid #333;
+      margin-bottom: 8px;
+      height: 60px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .signature-image {
+      max-width: 150px;
+      max-height: 50px;
+      margin-bottom: 5px;
+    }
+    
+    .signature-label {
+      font-weight: 600;
+      color: #333;
+      font-size: var(--body-font-size);
+    }
+    
+    .company-name {
+      font-size: var(--small-font-size);
+      color: #666;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+    
+    /* Stamp */
+    .stamp {
+      position: absolute;
+      <% if (exportSettings.stampPosition === 'manual') { %>
+      top: <%= exportSettings.stampTop || '200px' %>;
+      left: <%= exportSettings.stampLeft || '100px' %>;
+      <% } else { %>
+      top: 50px;
+      right: 100px;
+      <% } %>
+      opacity: 0.8;
+      z-index: 10;
+    }
+    
+    .stamp img {
+      width: <%= exportSettings.stampSize || '120px' %>;
+      height: auto;
+    }
+    
+    /* Footer */
+    .document-footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      color: #666;
+      font-size: var(--small-font-size);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .document-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .client-section {
+        grid-template-columns: 1fr;
+      }
+      
+      .signature-section {
+        flex-direction: column;
+        gap: 30px;
+      }
+    }
+  </style>
+</head>
+<body class="<%= exportSettings.letterhead && exportSettings.letterhead !== 'plain' ? 'letterhead' : '' %>">
+
+  <!-- Watermark -->
+  <% if (exportSettings.watermark) { %>
+  <div class="watermark"><%= exportSettings.watermark %></div>
+  <% } %>
+
+  <!-- Document Header -->
+  <div class="document-header">
+    <div class="header-left">
+      <h1 class="main-title"><%= exportSettings.customHeader || 'QUOTATION FOR WATERPROOFING' %></h1>
+      <p class="sub-title">VAT NO: OM1100077623</p>
+      
+      <div class="quote-info">
+        <div class="quote-info-row">
+          <span class="quote-info-label">Quotation No:</span>
+          <span class="quote-info-value"><%= quotation.quotation_no %></span>
+        </div>
+        <div class="quote-info-row">
+          <span class="quote-info-label">Date:</span>
+          <span class="quote-info-value"><%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <div class="qr-code">
+        <img src="<%= qrCodeDataURL %>" alt="QR Code" width="<%= exportSettings.qrSize || '100' %>" height="<%= exportSettings.qrSize || '100' %>">
+        <div class="qr-code-text">Scan for Quick Access</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Information -->
+  <div class="client-section">
+    <div class="client-card">
+      <h3>Client Details</h3>
+      <div class="client-info">
+        <span class="client-label">Name:</span>
+        <div class="client-value"><%= quotation.client_name %></div>
+      </div>
+      <% if (quotation.client_phone) { %>
+      <div class="client-info">
+        <span class="client-label">Phone:</span>
+        <div class="client-value"><%= quotation.client_phone %></div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Additional Contacts -->
+    <% 
+      const hasAdditionalContacts = quotation.contractor_name || quotation.engineer_name || 
+                                   quotation.subcontractor_name || quotation.attention_name;
+    %>
+    <% if (hasAdditionalContacts) { %>
+    <div class="client-card">
+      <h3>Additional Contacts</h3>
+      
+      <% if (quotation.contractor_name) { %>
+      <div class="client-info">
+        <span class="client-label">Contractor:</span>
+        <div class="client-value">
+          <%= quotation.contractor_name %>
+          <% if (quotation.contractor_phone) { %> - <%= quotation.contractor_phone %><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (quotation.engineer_name) { %>
+      <div class="client-info">
+        <span class="client-label">Engineer:</span>
+        <div class="client-value">
+          <%= quotation.engineer_name %>
+          <% if (quotation.engineer_phone) { %> - <%= quotation.engineer_phone %><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (quotation.subcontractor_name) { %>
+      <div class="client-info">
+        <span class="client-label">Subcontractor:</span>
+        <div class="client-value">
+          <%= quotation.subcontractor_name %>
+          <% if (quotation.subcontractor_phone) { %> - <%= quotation.subcontractor_phone %><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (quotation.attention_name) { %>
+      <div class="client-info">
+        <span class="client-label">Attention:</span>
+        <div class="client-value">
+          <%= quotation.attention_name %>
+          <% if (quotation.attention_phone) { %> - <%= quotation.attention_phone %><% } %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="client-card">
+      <h3>Project Information</h3>
+      <% if (quotation.project_location) { %>
+      <div class="client-info">
+        <span class="client-label">Location:</span>
+        <div class="client-value"><%= quotation.project_location %></div>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Project Details -->
+  <% if (quotation.project_location || quotation.ref_no || quotation.description) { %>
+  <div class="project-info">
+    <h3>Project Information</h3>
+    
+    <% if (quotation.project_location && !hasAdditionalContacts) { %>
+    <div class="client-info">
+      <span class="client-label">Location:</span>
+      <div class="client-value"><%= quotation.project_location %></div>
+    </div>
+    <% } %>
+
+    <% if (quotation.ref_no) { %>
+    <div class="client-info">
+      <span class="client-label">Reference:</span>
+      <div class="client-value">
+        <%= quotation.ref_no %>
+        <% if (quotation.ref_date) { %>
+          (<%= new Date(quotation.ref_date).toLocaleDateString('en-GB') %>)
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (quotation.description) { %>
+    <div class="client-info">
+      <span class="client-label">Description:</span>
+      <div class="client-value"><%= quotation.description %></div>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+
+  <!-- Quotation Items -->
+  <% if (items && items.length > 0) { %>
+  <div class="items-section page-break-avoid">
+    <h3 class="section-title">Quotation Items</h3>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 6%;">SL</th>
+          <th style="width: 50%;">Description</th>
+          <th style="width: 10%;">Qty</th>
+          <th style="width: 10%;">Unit</th>
+          <th style="width: 12%;">Rate (OMR)</th>
+          <th style="width: 12%;">Amount (OMR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% items.forEach((item, index) => { %>
+        <tr>
+          <td class="text-center"><%= index + 1 %></td>
+          <td><%= item.description %></td>
+          <td class="text-center"><%= parseFloat(item.qty).toFixed(3) %></td>
+          <td class="text-center"><%= item.unit %></td>
+          <td class="text-right"><%= parseFloat(item.rate).toFixed(3) %></td>
+          <td class="text-right"><%= parseFloat(item.amount).toFixed(3) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    
+    <!-- Summary Section -->
+    <div class="summary-section">
+      <table class="summary-table">
+        <tr>
+          <td class="summary-label">Total Amount:</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.total_amount).toFixed(3) %></td>
+        </tr>
+        <% if (quotation.discount > 0) { %>
+        <tr>
+          <td class="summary-label">Discount:</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.discount).toFixed(3) %></td>
+        </tr>
+        <% } %>
+        <tr>
+          <td class="summary-label">VAT (<%= quotation.vat_rate %>%):</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.vat_amount).toFixed(3) %></td>
+        </tr>
+        <% if (quotation.round_off != 0) { %>
+        <tr>
+          <td class="summary-label">Round Off:</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.round_off).toFixed(3) %></td>
+        </tr>
+        <% } %>
+        <tr class="grand-total">
+          <td>Grand Total:</td>
+          <td>OMR <%= parseFloat(quotation.grand_total).toFixed(3) %></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Scope of Work -->
+  <% 
+    const hasScope = scope && scope.length > 0 && scope.some(item => item && item.trim());
+  %>
+  <% if (hasScope) { %>
+  <div class="list-section">
+    <h3 class="section-title">Scope of Work</h3>
+    <div class="list-items">
+      <% scope.forEach((item, index) => { %>
+      <% if (item && item.trim()) { %>
+      <div class="list-item">
+        <span class="list-number"><%= index + 1 %>.</span>
+        <div class="list-text"><%= item %></div>
+      </div>
+      <% } %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Materials -->
+  <% 
+    const hasMaterials = materials && materials.length > 0 && materials.some(item => item && item.trim());
+  %>
+  <% if (hasMaterials) { %>
+  <div class="list-section">
+    <h3 class="section-title">Materials</h3>
+    <div class="list-items">
+      <% materials.forEach((item, index) => { %>
+      <% if (item && item.trim()) { %>
+      <div class="list-item">
+        <span class="list-number"><%= index + 1 %>.</span>
+        <div class="list-text"><%= item %></div>
+      </div>
+      <% } %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Terms & Conditions -->
+  <% 
+    const hasTerms = terms && terms.length > 0 && terms.some(item => item && item.trim());
+  %>
+  <% if (hasTerms) { %>
+  <div class="list-section">
+    <h3 class="section-title">Terms & Conditions</h3>
+    <div class="list-items">
+      <% terms.forEach((item, index) => { %>
+      <% if (item && item.trim()) { %>
+      <div class="list-item">
+        <span class="list-number"><%= index + 1 %>.</span>
+        <div class="list-text"><%= item %></div>
+      </div>
+      <% } %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Warranty Section -->
+  <div class="warranty-section">
+    <div class="warranty-title">Warranty</div>
+    <div class="warranty-period"><%= quotation.warranty %> YEARS WARRANTY</div>
+    <% if (quotation.warranty_note) { %>
+    <div class="warranty-note"><%= quotation.warranty_note %></div>
+    <% } %>
+  </div>
+
+  <!-- Signature Section -->
+  <% if (exportSettings.includeSignature) { %>
+  <div class="signature-section">
+    <div class="signature-block">
+      <div class="signature-line">
+        <% if (exportSettings.signatureImage) { %>
+        <img src="<%= exportSettings.signatureImage %>" alt="Signature" class="signature-image">
+        <% } %>
+      </div>
+      <div class="signature-label">Authorized Signatory</div>
+      <div class="company-name">International Pipes Technology Co LLC</div>
+    </div>
+    
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-label">Client Signature</div>
+      <div class="company-name">Date: _______________</div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Company Stamp -->
+  <% if (exportSettings.includeStamp && exportSettings.stampImage) { %>
+  <div class="stamp">
+    <img src="<%= exportSettings.stampImage %>" alt="Company Stamp">
+  </div>
+  <% } %>
+
+  <!-- Footer -->
+  <div class="document-footer">
+    <p>This quotation is valid for 30 days from the date of issue.</p>
+    <p>International Pipes Technology Co LLC | CR No: 2231867 | Salalah, Sultanate of Oman</p>
+    <p>Email: eurotechoman.iptc@gmail.com | Website: www.eurotechoman.com</p>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search Quotations | QuotePro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/images/quotepro-logo.png">
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    .action-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .action-btn.view {
+      background: #3b82f6;
+      color: white;
+    }
+    .action-btn.view:hover {
+      background: #2563eb;
+    }
+    .action-btn.edit {
+      background: #10b981;
+      color: white;
+    }
+    .action-btn.edit:hover {
+      background: #059669;
+    }
+    .action-btn.export {
+      background: #8b5cf6;
+      color: white;
+    }
+    .action-btn.export:hover {
+      background: #7c3aed;
+    }
+    .action-btn.delete {
+      background: #ef4444;
+      color: white;
+    }
+    .action-btn.delete:hover {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-[Outfit]">
+
+<!-- 🔴 TOPBAR -->
+<div class="bg-red-700 text-white px-6 py-4 flex justify-between items-center">
+  <div class="flex items-center gap-4">
+    <img src="/images/quotepro-logo-white.png" class="h-10" />
+    <div>
+      <h1 class="text-xl font-bold">QuotePro – Search Quotations</h1>
+      <p class="text-sm">by Muhammed Boss</p>
+    </div>
+  </div>
+  <a href="/dashboard" class="bg-white text-red-700 px-4 py-2 rounded hover:bg-gray-200">🏠 Dashboard</a>
+</div>
+
+<!-- 🔍 SEARCH CONTAINER -->
+<div class="max-w-6xl mx-auto bg-white p-6 my-6 rounded shadow">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Search Quotations</h2>
+    <div class="relative">
+<!-- Update the search input placeholder in quotation-search.ejs -->
+<input
+  type="text"
+  id="quotation-search-input"
+  class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+  placeholder="Search by quotation number, client name, phone number, location, amount..."
+  autocomplete="off"
+/>
+      <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+        🔍
+      </div>
+    </div>
+  </div>
+
+  <!-- 📋 SEARCH RESULTS -->
+  <div id="quotation-search-results" class="space-y-4">
+    <p class="text-gray-500 text-center py-8">Start typing to search quotations...</p>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+    <div class="text-center">
+      <div class="text-6xl mb-4">⚠️</div>
+      <h2 class="text-xl font-bold mb-2">Delete Quotation</h2>
+      <p class="text-gray-600 mb-4">Are you sure you want to delete:</p>
+      <div id="delete-details" class="bg-gray-50 p-3 rounded mb-4">
+        <!-- Details will be populated by JavaScript -->
+      </div>
+      <p class="text-red-600 text-sm mb-6">This action cannot be undone.</p>
+      <div class="flex gap-3">
+        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+          Cancel
+        </button>
+        <button id="confirm-delete-btn" class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          Delete Quotation
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let deleteQuotationId = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("quotation-search-input");
+  const resultsBox = document.getElementById("quotation-search-results");
+
+  if (!input || !resultsBox) return;
+
+  input.addEventListener("input", async () => {
+    const query = input.value.trim();
+    if (!query) {
+      resultsBox.innerHTML = '<p class="text-gray-500 text-center py-8">Start typing to search quotations...</p>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/quotations/search-data?q=${encodeURIComponent(query)}`);
+      if (!res.ok) throw new Error("Search failed");
+
+      const data = await res.json();
+      resultsBox.innerHTML = "";
+
+      if (!data.results || data.results.length === 0) {
+        resultsBox.innerHTML = "<p class='text-gray-500 text-center py-8'>No matching quotations found.</p>";
+        return;
+      }
+
+      data.results.forEach((q) => {
+        const div = document.createElement("div");
+        div.className = "border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow";
+        
+        div.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-lg font-bold text-blue-600">${q.quotation_no}</h3>
+                <span class="px-2 py-1 bg-green-100 text-green-800 text-sm rounded">OMR ${parseFloat(q.grand_total).toFixed(3)}</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p class="font-medium text-gray-700">Client:</p>
+                  <p class="text-gray-900">${q.client_name || 'N/A'}</p>
+                  ${q.client_phone ? `<p class="text-gray-600">${q.client_phone}</p>` : ''}
+                </div>
+                <div>
+                  <p class="font-medium text-gray-700">Location:</p>
+                  <p class="text-gray-900">${q.project_location || 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="font-medium text-gray-700">Date:</p>
+                  <p class="text-gray-900">${new Date(q.tdate).toLocaleDateString('en-GB')}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-2 ml-4">
+              <a href="/quotations/view/${q.id}" class="action-btn view">
+                👁️ View
+              </a>
+              <a href="/quotations/edit/${q.id}" class="action-btn edit">
+                ✏️ Edit
+              </a>
+              <button onclick="exportQuotation(${q.id})" class="action-btn export">
+                📤 Export
+              </button>
+              <button onclick="deleteQuotation(${q.id}, '${q.quotation_no}', '${q.client_name}', ${q.grand_total})" class="action-btn delete">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        `;
+        
+        resultsBox.appendChild(div);
+      });
+    } catch (err) {
+      resultsBox.innerHTML = "<p class='text-red-500 text-center py-8'>Error loading results</p>";
+      console.error("Search error:", err);
+    }
+  });
+});
+
+// Export function (placeholder)
+function exportQuotation(id) {
+  alert('Export functionality will be implemented in Phase 3!');
+}
+
+// Delete functions
+function deleteQuotation(id, quotationNo, clientName, grandTotal) {
+  deleteQuotationId = id;
+  
+  document.getElementById('delete-details').innerHTML = `
+    <p class="font-medium">${quotationNo}</p>
+    <p class="text-sm text-gray-600">${clientName}</p>
+    <p class="text-sm text-gray-600">OMR ${parseFloat(grandTotal).toFixed(3)}</p>
+  `;
+  
+  document.getElementById('confirm-delete-btn').onclick = () => confirmDelete(id);
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+
+function closeDeleteModal() {
+  deleteQuotationId = null;
+  document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-modal').classList.remove('flex');
+}
+
+function confirmDelete(id) {
+  fetch(`/quotations/${id}`, { method: 'DELETE' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        closeDeleteModal();
+        // Refresh search results
+        const input = document.getElementById("quotation-search-input");
+        input.dispatchEvent(new Event('input'));
+        
+        // Show success message
+        showMessage('Quotation deleted successfully!', 'success');
+      } else {
+        alert('Error deleting quotation: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => {
+      console.error('Delete error:', err);
+      alert('Error deleting quotation');
+    });
+}
+
+// Show message function
+function showMessage(message, type = 'success') {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 ${
+    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+  }`;
+  messageDiv.textContent = message;
+  
+  document.body.appendChild(messageDiv);
+  
+  setTimeout(() => {
+    messageDiv.remove();
+  }, 3000);
+}
+</script>
+
+</body>
+</html>

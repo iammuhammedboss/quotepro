@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | QuotePro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="icon" type="image/png" href="/images/quotepro-logo.png">
+</head>
+
+<body>
+
+<!-- Splash Screen -->
+<div class="splash-screen" id="splash">
+  <img src="/images/eurotech-logo.png" class="splash-logo" alt="Eurotech Logo">
+  <p class="tagline">Welcome back, <%= user?.username || 'Guest' %>!</p>
+</div>
+
+<script>
+  window.addEventListener("load", function () {
+    setTimeout(() => {
+      const splash = document.getElementById("splash");
+      if (splash) {
+        splash.style.opacity = 0;
+        setTimeout(() => {
+          splash.style.display = "none";
+          const content = document.getElementById("main-content");
+          if (content) {
+            content.style.display = "block";
+            setTimeout(() => content.classList.add("visible"), 50);
+          }
+        }, 800);
+      }
+    }, 2000);
+  });
+</script>
+
+<!-- Dashboard Content -->
+<div class="dashboard-wrapper fade-in" id="main-content" style="display: none;">
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="branding" style="display: flex; align-items: center; gap: 10px;">
+        <img src="/images/quotepro-logo.png" alt="QuotePro Logo" style="height: 54px;">
+        <div>
+          <h2 style="color: #c91f1f; margin: 0">QuotePro</h2>
+          <p class="byline" style="margin: 0; font-size: 0.85em">by Muhammed Boss</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/logout" class="nav-btn" style="border: 1px solid #c91f1f; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; display: block; text-align: center;">🚪 Logout</a>
+        <a href="/" class="nav-btn" style="border: 1px solid #c91f1f; border-radius: 6px; padding: 8px 10px; display: block; text-align: center;">❌ Exit</a>
+      </nav>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-content">
+      <div class="top-right-logo" style="display: flex; align-items: center; gap: 12px; justify-content: flex-end;">
+        <img src="/images/eurotech-logo.png" alt="Eurotech Logo" style="height: 40px;">
+      </div>
+
+      <h1 style="color: #333">
+        Welcome, <%= user?.username || 'Guest' %> 👋
+      </h1>
+
+      <p class="subtitle">Manage quotations and master data easily below.</p>
+
+      <!-- Quotations Section -->
+      <section class="dashboard-section">
+        <h2 style="color: #1d72b8">🧾 Quotations</h2>
+        <div class="card-grid">
+          <a href="/quotations/create" class="dash-card" style="background-color: #eaf6ff">➕ Create Quotation</a>
+          <a href="/quotations/search" class="dash-card" style="background-color: #fff4e5">✏️ Edit Quotation</a>
+          <a href="/quotations/search" class="dash-card" style="background-color: #e5ffe5">🔍 Search Quotations</a>
+        </div>
+      </section>
+
+      <!-- Masters Section -->
+      <section class="dashboard-section">
+        <h2 style="color: #c91f1f">📂 Masters</h2>
+        <div class="card-grid">
+          <a href="/clients" class="dash-card">👤 Clients</a>
+          <a href="/quotation-items" class="dash-card" style="background-color: #fffbe5">📋 Quotation Items</a>
+          <a href="/units" class="dash-card" style="background-color: #e5f0ff">📏 Units</a>
+          <a href="/materials" class="dash-card" style="background-color: #fff0f0">🧱 Materials</a>
+          <a href="/scope" class="dash-card" style="background-color: #f3ffe5">📌 Scope of Work</a>
+          <a href="/terms" class="dash-card" style="background-color: #f5f5ff">📜 Terms & Conditions</a>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+</div>
+
+<style>
+  .sidebar-nav .nav-btn:hover {
+    background-color: #c91f1f;
+    color: white;
+    border-color: #c91f1f;
+  }
+</style>
+
+</body>
+</html>

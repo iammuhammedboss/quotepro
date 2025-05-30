@@ -99,10 +99,10 @@
     <span>🗑️</span>
     <span>Delete</span>
   </button>
-  <button onclick="exportQuotation(<%= quotation.id %>)" class="action-btn export">
-    <span>📤</span>
-    <span>Export</span>
-  </button>
+<button onclick="exportQuotation(<%= quotation.id %>)" class="action-btn export">
+  <span>📤</span>
+  <span>Export</span>
+</button>
   <a href="/quotations/create" class="action-btn">
     <span>➕</span>
     <span>New</span>
@@ -448,7 +448,8 @@ function duplicateQuotation(id) {
 
 // Export Quotation (placeholder for now)
 function exportQuotation(id) {
-  alert('Export functionality will be implemented in Phase 3!');
+  // Redirect to the new export interface
+  window.location.href = `/quotations/export/${id}`;
 }
 
 // Delete Quotation

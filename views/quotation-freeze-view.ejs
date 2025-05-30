@@ -446,10 +446,9 @@ function duplicateQuotation(id) {
   }
 }
 
-// Export Quotation (placeholder for now)
 function exportQuotation(id) {
-  // Redirect to the new export interface
-  window.location.href = `/quotations/export/${id}`;
+  // Open the export configuration page in a new tab
+  window.open(`/quotations/export/${id}`, '_blank');
 }
 
 // Delete Quotation

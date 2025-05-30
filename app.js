@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const multer = require('multer'); // Add this
 const db = require('./models/db');
 
 const loginRoute = require('./routes/login');
@@ -13,6 +12,8 @@ const unitsRoutes = require('./routes/units');
 const quotationItemsRoutes = require('./routes/quotation_items');
 const quotationRoutes = require('./routes/quotation');
 const searchRoutes = require('./routes/search');
+// 🔥 ADD THIS LINE - Import export routes
+const exportRoutes = require('./routes/export');
 
 const app = express();
 const PORT = 3000;
@@ -29,12 +30,9 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// ✅ FIXED: Middleware - Add multer for FormData handling
-const upload = multer(); // Configure multer for memory storage
-
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.json({ limit: '50mb' }));
-app.use(upload.any()); // ✅ Add this to handle FormData
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use('/js', (req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
@@ -51,6 +49,8 @@ app.use('/', unitsRoutes);
 app.use('/', quotationItemsRoutes);
 app.use('/', quotationRoutes);
 app.use('/', searchRoutes);
+// 🔥 ADD THIS LINE - Mount export routes
+app.use('/', exportRoutes);
 
 // Page routes
 app.get('/', (req, res) => res.render('login'));

@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const multer = require('multer'); // Add this
 const db = require('./models/db');
 
 const loginRoute = require('./routes/login');
@@ -28,15 +29,17 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// ✅ FIXED: Middleware - Add multer for FormData handling
+const upload = multer(); // Configure multer for memory storage
+
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(upload.any()); // ✅ Add this to handle FormData
 app.use('/js', (req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 // Route mounting
 app.use('/', loginRoute);
@@ -48,12 +51,6 @@ app.use('/', unitsRoutes);
 app.use('/', quotationItemsRoutes);
 app.use('/', quotationRoutes);
 app.use('/', searchRoutes);
-
-// In your app.js, make sure you have these middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// If you're using multer for file uploads, make sure it's configured properly
 
 // Page routes
 app.get('/', (req, res) => res.render('login'));

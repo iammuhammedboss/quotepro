@@ -1,560 +1,557 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quotation #<%= quotation.quotation_no %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotation Preview</title>
   <style>
-    /* Make content fill the iframe */
-    html, body {
+    body {
       margin: 0;
       padding: 20px;
-      height: 100%;
-      overflow-x: hidden;
-      font-family: 'Outfit', sans-serif;
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
-      line-height: 1.4;
-      color: #000;
+      font-family: 'Arial', sans-serif;
       background: white;
+      color: #333;
+      line-height: 1.4;
     }
     
-    /* Ensure proper scaling in iframe */
-    body {
-      transform-origin: top left;
-      width: 100%;
-      min-height: 100vh;
+    .quotation-container {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+      min-height: 297mm;
+      <% if (exportSettings.paperType && exportSettings.paperType.includes('letterhead')) { %>
+      background-image: url('/images/eurotech-letterhead.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      <% } %>
     }
     
-    /* Print styles */
-    @media print {
-      body { margin: 0; padding: 10px; }
-      .no-print { display: none !important; }
-      .page-break { page-break-before: always; }
-      .page-break-avoid { page-break-inside: avoid; }
+    /* ✅ Letterhead overlay for content */
+    .content-overlay {
+      <% if (exportSettings.paperType && exportSettings.paperType.includes('letterhead')) { %>
+      background: rgba(255, 255, 255, 0.95);
+      margin: 60px 40px 40px 40px;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      <% } else { %>
+      padding: 40px;
+      <% } %>
     }
     
-    /* Header Section */
-    .document-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+    .header {
+      text-align: center;
       margin-bottom: 30px;
-      gap: 20px;
-    }
-    
-    .header-left {
-      flex: 1;
-    }
-    
-    .header-right {
-      flex-shrink: 0;
-      text-align: right;
+      border-bottom: 3px solid #dc2626;
+      padding-bottom: 20px;
     }
     
     .main-title {
       font-size: <%= exportSettings.headerFontSize || '28px' %>;
       font-weight: bold;
-      color: #c91f1f;
-      margin: 0 0 8px 0;
-      text-transform: uppercase;
+      color: #dc2626;
+      margin: 0 0 10px 0;
       letter-spacing: 1px;
     }
     
-    .sub-title {
-      font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
-      font-weight: 600;
-      color: #555;
-      margin: 0 0 20px 0;
+    .vat-number {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
     }
     
-    .quote-info {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid #c91f1f;
-    }
-    
-    .quote-info-row {
+    .quotation-info {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
+      align-items: flex-start;
+      margin-bottom: 10px;
     }
     
-    .quote-info-row:last-child {
-      margin-bottom: 0;
+    .quotation-details {
+      border-left: 4px solid #dc2626;
+      padding-left: 15px;
     }
     
-    .quote-info-label {
-      font-weight: 600;
-      color: #666;
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
-    }
-    
-    .quote-info-value {
-      font-weight: bold;
-      color: #000;
+    .quotation-details div {
+      margin-bottom: 5px;
       font-size: <%= exportSettings.bodyFontSize || '14px' %>;
     }
     
-    /* QR Code */
-    .qr-code {
-      border: 2px solid #c91f1f;
-      padding: 10px;
-      border-radius: 8px;
-      background: white;
+    .quotation-details strong {
+      color: #dc2626;
+    }
+    
+    .qr-container {
       text-align: center;
+      border: 2px solid #dc2626;
+      border-radius: 8px;
+      padding: 10px;
+      background: white;
     }
     
-    .qr-code img {
-      display: block;
-      margin: 0 auto 8px auto;
-      width: <%= exportSettings.qrSize || '100' %>px;
-      height: <%= exportSettings.qrSize || '100' %>px;
+    .qr-code {
+      width: <%= exportSettings.qrSize || '100px' %>;
+      height: <%= exportSettings.qrSize || '100px' %>;
+      margin-bottom: 5px;
     }
     
-    .qr-code-text {
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
+    .qr-text {
+      font-size: 10px;
       color: #666;
-      font-weight: 600;
     }
     
-    /* Client Information */
-    .client-section {
+    .two-column {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 30px;
-      margin-bottom: 25px;
+      margin: 30px 0;
     }
     
-    .client-card {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
-      border-top: 3px solid #c91f1f;
-    }
-    
-    .client-card h3 {
-      margin: 0 0 15px 0;
-      font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
-      color: #c91f1f;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 8px;
-    }
-    
-    .client-info {
-      margin-bottom: 12px;
-    }
-    
-    .client-label {
-      font-weight: 600;
-      color: #666;
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
-      display: block;
-      margin-bottom: 3px;
-    }
-    
-    .client-value {
-      color: #000;
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
-    }
-    
-    /* Project Information */
-    .project-info {
-      background: #f0f7ff;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 25px;
-      border-left: 4px solid #007bff;
-    }
-    
-    .project-info h3 {
-      margin: 0 0 15px 0;
-      color: #007bff;
-      font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
-    }
-    
-    /* Items Table */
-    .items-section {
-      margin-bottom: 25px;
+    .section {
+      margin-bottom: 20px;
     }
     
     .section-title {
-      font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
+      font-size: 16px;
       font-weight: bold;
-      color: #333;
-      margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #c91f1f;
+      color: #dc2626;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #dc2626;
+    }
+    
+    .client-info, .project-info {
+      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
+    }
+    
+    .client-info div, .project-info div {
+      margin-bottom: 8px;
+    }
+    
+    .label {
+      font-weight: bold;
+      color: #555;
+      display: inline-block;
+      width: 80px;
     }
     
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
+      margin: 20px 0;
       font-size: <%= exportSettings.tableFontSize || '12px' %>;
     }
     
     .items-table th {
-      background: #c91f1f;
+      background: #dc2626;
       color: white;
       padding: 12px 8px;
       text-align: center;
-      font-weight: 600;
-      border: 1px solid #a91717;
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
+      font-weight: bold;
     }
     
     .items-table td {
       padding: 10px 8px;
-      border: 1px solid #ddd;
-      vertical-align: top;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
     }
     
     .items-table tr:nth-child(even) {
-      background-color: #f9f9f9;
+      background: #f9f9f9;
     }
     
-    .items-table .text-center { text-align: center; }
-    .items-table .text-right { text-align: right; }
+    .description-cell {
+      text-align: left !important;
+      max-width: 300px;
+    }
     
-    /* Summary Section */
-    .summary-section {
+    .amount-cell {
+      text-align: right !important;
+      font-weight: bold;
+    }
+    
+    .totals-section {
+      margin: 20px 0;
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 25px;
     }
     
-    .summary-table {
-      width: 350px;
-      border-collapse: collapse;
+    .totals-table {
+      width: 300px;
       font-size: <%= exportSettings.bodyFontSize || '14px' %>;
     }
     
-    .summary-table td {
+    .totals-table td {
       padding: 8px 12px;
-      border: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
     }
     
-    .summary-table .summary-label {
-      background: #f8f9fa;
-      font-weight: 600;
-      text-align: left;
-      color: #666;
-    }
-    
-    .summary-table .summary-value {
+    .totals-table .label-cell {
       text-align: right;
-      font-weight: 500;
-    }
-    
-    .summary-table .grand-total {
-      background: #c91f1f;
-      color: white;
       font-weight: bold;
-      font-size: calc(<%= exportSettings.bodyFontSize || '14px' %> + 2px);
+      color: #555;
     }
     
-    /* Lists (Scope, Materials, Terms) */
+    .totals-table .value-cell {
+      text-align: right;
+      width: 120px;
+    }
+    
+    .grand-total-row {
+      background: #dc2626 !important;
+      color: white !important;
+      font-weight: bold;
+    }
+    
+    .grand-total-row td {
+      border-bottom: none !important;
+    }
+    
     .list-section {
-      margin-bottom: 25px;
-      page-break-avoid: auto;
+      margin: 25px 0;
+    }
+    
+    .list-section h3 {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #ddd;
     }
     
     .list-items {
-      background: #fafafa;
-      padding: 15px 20px;
-      border-radius: 8px;
+      padding-left: 0;
+      margin: 0;
+    }
+    
+    .list-items li {
+      background: #f8f9fa;
+      margin-bottom: 8px;
+      padding: 10px 15px;
       border-left: 4px solid #28a745;
-    }
-    
-    .list-item {
-      display: flex;
-      margin-bottom: 10px;
-      align-items: flex-start;
-    }
-    
-    .list-item:last-child {
-      margin-bottom: 0;
-    }
-    
-    .list-number {
-      font-weight: 600;
-      color: #28a745;
-      margin-right: 12px;
-      min-width: 20px;
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
-    }
-    
-    .list-text {
-      flex: 1;
-      color: #333;
+      list-style: none;
       font-size: <%= exportSettings.bodyFontSize || '14px' %>;
-      line-height: 1.5;
+      position: relative;
     }
     
-    /* Warranty Section */
+    .list-items li:before {
+      content: counter(list-counter);
+      counter-increment: list-counter;
+      position: absolute;
+      left: -20px;
+      top: 10px;
+      background: #28a745;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    
+    .scope-list {
+      counter-reset: list-counter;
+    }
+    
+    .materials-list {
+      counter-reset: list-counter;
+    }
+    
+    .terms-list {
+      counter-reset: list-counter;
+    }
+    
     .warranty-section {
-      background: linear-gradient(135deg, #007bff, #0056b3);
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
       color: white;
       padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 25px;
+      margin: 30px 0;
       text-align: center;
+      border-radius: 10px;
     }
     
     .warranty-title {
-      font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
+      font-size: 18px;
       font-weight: bold;
       margin-bottom: 10px;
     }
     
-    .warranty-period {
-      font-size: calc(<%= exportSettings.headerFontSize || '28px' %> - 4px);
+    .warranty-years {
+      font-size: 32px;
       font-weight: bold;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      margin: 10px 0;
     }
     
     .warranty-note {
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
-      opacity: 0.9;
-      line-height: 1.4;
-    }
-    
-    /* Footer */
-    .document-footer {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #ddd;
-      text-align: center;
-      color: #666;
       font-size: <%= exportSettings.smallFontSize || '11px' %>;
+      opacity: 0.9;
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .document-header {
-        flex-direction: column;
-        text-align: center;
+    /* ✅ Signature and Stamp positioning */
+    .signature-section {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    
+    .signature-box, .stamp-box {
+      text-align: center;
+    }
+    
+    .signature-image, .stamp-image {
+      max-width: 150px;
+      max-height: 80px;
+      margin-bottom: 10px;
+    }
+    
+    .signature-line {
+      border-top: 1px solid #333;
+      width: 200px;
+      margin: 0 auto;
+      padding-top: 5px;
+      font-size: <%= exportSettings.smallFontSize || '11px' %>;
+      color: #666;
+    }
+    
+    /* ✅ Print optimizations */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
       }
       
-      .client-section {
+      .quotation-container {
+        box-shadow: none;
+        border: none;
+        page-break-inside: avoid;
+      }
+      
+      .content-overlay {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+    }
+    
+    /* ✅ Responsive adjustments */
+    @media screen and (max-width: 768px) {
+      .quotation-container {
+        max-width: 100%;
+        margin: 0;
+      }
+      
+      .content-overlay {
+        margin: 20px;
+        padding: 20px;
+      }
+      
+      .two-column {
         grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .quotation-info {
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .items-table {
+        font-size: 10px;
+      }
+      
+      .items-table th,
+      .items-table td {
+        padding: 6px 4px;
       }
     }
   </style>
 </head>
 <body>
-
-  <!-- Document Header -->
-  <div class="document-header">
-    <div class="header-left">
-      <h1 class="main-title"><%= exportSettings.customHeader || 'QUOTATION FOR WATERPROOFING' %></h1>
-      <p class="sub-title">VAT NO: OM1100077623</p>
+  <div class="quotation-container">
+    <div class="content-overlay">
       
-      <div class="quote-info">
-        <div class="quote-info-row">
-          <span class="quote-info-label">Quotation No:</span>
-          <span class="quote-info-value"><%= quotation.quotation_no || 'N/A' %></span>
-        </div>
-        <div class="quote-info-row">
-          <span class="quote-info-label">Date:</span>
-          <span class="quote-info-value"><%= quotation.tdate ? new Date(quotation.tdate).toLocaleDateString('en-GB') : 'N/A' %></span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="header-right">
-      <div class="qr-code">
-        <% if (qrCodeDataURL) { %>
-        <img src="<%= qrCodeDataURL %>" alt="QR Code">
-        <% } else { %>
-        <div style="width: <%= exportSettings.qrSize || '100' %>px; height: <%= exportSettings.qrSize || '100' %>px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
-          <span style="font-size: 12px; color: #999;">QR Code</span>
-        </div>
-        <% } %>
-        <div class="qr-code-text">Scan for Quick Access</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Client Information -->
-  <div class="client-section">
-    <div class="client-card">
-      <h3>Client Details</h3>
-      <div class="client-info">
-        <span class="client-label">Name:</span>
-        <div class="client-value"><%= quotation.client_name || 'N/A' %></div>
-      </div>
-      <% if (quotation.client_phone) { %>
-      <div class="client-info">
-        <span class="client-label">Phone:</span>
-        <div class="client-value"><%= quotation.client_phone %></div>
-      </div>
-      <% } %>
-    </div>
-
-    <!-- Project Information -->
-    <div class="client-card">
-      <h3>Project Information</h3>
-      <% if (quotation.project_location) { %>
-      <div class="client-info">
-        <span class="client-label">Location:</span>
-        <div class="client-value"><%= quotation.project_location %></div>
-      </div>
-      <% } %>
-      
-      <% if (quotation.ref_no) { %>
-      <div class="client-info">
-        <span class="client-label">Reference:</span>
-        <div class="client-value">
-          <%= quotation.ref_no %>
-          <% if (quotation.ref_date) { %>
-            (<%= new Date(quotation.ref_date).toLocaleDateString('en-GB') %>)
+      <!-- Header Section -->
+      <div class="header">
+        <h1 class="main-title"><%= exportSettings.customHeader || 'QUOTATION FOR WATERPROOFING' %></h1>
+        <div class="vat-number">VAT NO: OM1100077623</div>
+        
+        <div class="quotation-info">
+          <div class="quotation-details">
+            <div><strong>Quotation No:</strong> <%= quotation.quotation_no %></div>
+            <div><strong>Date:</strong> <%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></div>
+          </div>
+          
+          <% if (qrCodeDataURL) { %>
+          <div class="qr-container">
+            <img src="<%= qrCodeDataURL %>" alt="QR Code" class="qr-code">
+            <div class="qr-text">Scan for Quick Access</div>
+          </div>
           <% } %>
         </div>
       </div>
-      <% } %>
-
-      <% if (quotation.description) { %>
-      <div class="client-info">
-        <span class="client-label">Description:</span>
-        <div class="client-value"><%= quotation.description %></div>
+      
+      <!-- Client and Project Information -->
+      <div class="two-column">
+        <div class="section">
+          <div class="section-title">Client Details</div>
+          <div class="client-info">
+            <div><span class="label">Name:</span> <%= quotation.client_name || 'N/A' %></div>
+            <div><span class="label">Phone:</span> <%= quotation.client_phone || 'N/A' %></div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Project Information</div>
+          <div class="project-info">
+            <div><span class="label">Location:</span> <%= quotation.project_location || 'N/A' %></div>
+            <% if (quotation.ref_no) { %>
+            <div><span class="label">Reference:</span> <%= quotation.ref_no %></div>
+            <% } %>
+            <% if (quotation.description) { %>
+            <div><span class="label">Description:</span> <%= quotation.description %></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quotation Items -->
+      <% if (items && items.length > 0) { %>
+      <div class="section">
+        <div class="section-title">Quotation Items</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">SL</th>
+              <th style="width: 40%;">Description</th>
+              <th style="width: 80px;">Qty</th>
+              <th style="width: 80px;">Unit</th>
+              <th style="width: 100px;">Rate (OMR)</th>
+              <th style="width: 120px;">Amount (OMR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% items.forEach((item, index) => { %>
+            <tr>
+              <td><%= index + 1 %></td>
+              <td class="description-cell"><%= item.description %></td>
+              <td><%= parseFloat(item.qty).toLocaleString() %></td>
+              <td><%= item.unit %></td>
+              <td class="amount-cell"><%= parseFloat(item.rate).toFixed(3) %></td>
+              <td class="amount-cell"><%= parseFloat(item.amount).toFixed(3) %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        
+        <!-- Totals Section -->
+        <div class="totals-section">
+          <table class="totals-table">
+            <tr>
+              <td class="label-cell">Total Amount:</td>
+              <td class="value-cell">OMR <%= parseFloat(quotation.total_amount || 0).toFixed(3) %></td>
+            </tr>
+            <% if (quotation.discount && parseFloat(quotation.discount) > 0) { %>
+            <tr>
+              <td class="label-cell">Discount:</td>
+              <td class="value-cell">OMR <%= parseFloat(quotation.discount).toFixed(3) %></td>
+            </tr>
+            <% } %>
+            <% if (quotation.vat_rate && parseFloat(quotation.vat_rate) > 0) { %>
+            <tr>
+              <td class="label-cell">VAT (<%= parseFloat(quotation.vat_rate).toFixed(2) %>%):</td>
+              <td class="value-cell">OMR <%= parseFloat(quotation.vat_amount || 0).toFixed(3) %></td>
+            </tr>
+            <% } %>
+            <% if (quotation.round_off && parseFloat(quotation.round_off) !== 0) { %>
+            <tr>
+              <td class="label-cell">Round Off:</td>
+              <td class="value-cell">OMR <%= parseFloat(quotation.round_off).toFixed(3) %></td>
+            </tr>
+            <% } %>
+            <tr class="grand-total-row">
+              <td class="label-cell">Grand Total:</td>
+              <td class="value-cell">OMR <%= parseFloat(quotation.grand_total || 0).toFixed(3) %></td>
+            </tr>
+          </table>
+        </div>
       </div>
       <% } %>
-    </div>
-  </div>
-
-  <!-- Quotation Items -->
-  <% if (items && items.length > 0) { %>
-  <div class="items-section page-break-avoid">
-    <h3 class="section-title">Quotation Items</h3>
-    <table class="items-table">
-      <thead>
-        <tr>
-          <th style="width: 6%;">SL</th>
-          <th style="width: 50%;">Description</th>
-          <th style="width: 10%;">Qty</th>
-          <th style="width: 10%;">Unit</th>
-          <th style="width: 12%;">Rate (OMR)</th>
-          <th style="width: 12%;">Amount (OMR)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% items.forEach((item, index) => { %>
-        <tr>
-          <td class="text-center"><%= index + 1 %></td>
-          <td><%= item.description || 'N/A' %></td>
-          <td class="text-center"><%= parseFloat(item.qty || 0).toFixed(3) %></td>
-          <td class="text-center"><%= item.unit || 'N/A' %></td>
-          <td class="text-right"><%= parseFloat(item.rate || 0).toFixed(3) %></td>
-          <td class="text-right"><%= parseFloat(item.amount || 0).toFixed(3) %></td>
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    
-    <!-- Summary Section -->
-    <div class="summary-section">
-      <table class="summary-table">
-        <tr>
-          <td class="summary-label">Total Amount:</td>
-          <td class="summary-value">OMR <%= parseFloat(quotation.total_amount || 0).toFixed(3) %></td>
-        </tr>
-        <% if (quotation.discount && quotation.discount > 0) { %>
-        <tr>
-          <td class="summary-label">Discount:</td>
-          <td class="summary-value">OMR <%= parseFloat(quotation.discount).toFixed(3) %></td>
-        </tr>
+      
+      <!-- Scope of Work -->
+      <% if (scope && scope.length > 0) { %>
+      <div class="list-section">
+        <h3>Scope of Work</h3>
+        <ol class="list-items scope-list">
+          <% scope.forEach(item => { %>
+          <li><%= item %></li>
+          <% }); %>
+        </ol>
+      </div>
+      <% } %>
+      
+      <!-- Materials -->
+      <% if (materials && materials.length > 0) { %>
+      <div class="list-section">
+        <h3>Materials</h3>
+        <ol class="list-items materials-list">
+          <% materials.forEach(item => { %>
+          <li><%= item %></li>
+          <% }); %>
+        </ol>
+      </div>
+      <% } %>
+      
+      <!-- Terms & Conditions -->
+      <% if (terms && terms.length > 0) { %>
+      <div class="list-section">
+        <h3>Terms & Conditions</h3>
+        <ol class="list-items terms-list">
+          <% terms.forEach(item => { %>
+          <li><%= item %></li>
+          <% }); %>
+        </ol>
+      </div>
+      <% } %>
+      
+      <!-- Warranty Section -->
+      <% if (quotation.warranty && quotation.warranty > 0) { %>
+      <div class="warranty-section">
+        <div class="warranty-title">Warranty</div>
+        <div class="warranty-years"><%= quotation.warranty %> YEARS WARRANTY</div>
+        <% if (quotation.warranty_note) { %>
+        <div class="warranty-note"><%= quotation.warranty_note %></div>
+        <% } else { %>
+        <div class="warranty-note">WARRANTY ONLY APPLICABLE FOR DONE AREA</div>
         <% } %>
-        <tr>
-          <td class="summary-label">VAT (<%= quotation.vat_rate || 5 %>%):</td>
-          <td class="summary-value">OMR <%= parseFloat(quotation.vat_amount || 0).toFixed(3) %></td>
-        </tr>
-        <% if (quotation.round_off && quotation.round_off != 0) { %>
-        <tr>
-          <td class="summary-label">Round Off:</td>
-          <td class="summary-value">OMR <%= parseFloat(quotation.round_off).toFixed(3) %></td>
-        </tr>
+      </div>
+      <% } %>
+      
+      <!-- Signature and Stamp Section -->
+      <% if (exportSettings.includeSignature || exportSettings.includeStamp) { %>
+      <div class="signature-section">
+        <% if (exportSettings.includeSignature) { %>
+        <div class="signature-box">
+          <img src="/images/eurotech-signature.jpg" alt="Signature" class="signature-image">
+          <div class="signature-line">Authorized Signature</div>
+        </div>
         <% } %>
-        <tr class="grand-total">
-          <td>Grand Total:</td>
-          <td class="summary-value">OMR <%= parseFloat(quotation.grand_total || 0).toFixed(3) %></td>
-        </tr>
-      </table>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Scope of Work -->
-  <% if (scope && scope.length > 0 && scope.some(item => item && item.trim())) { %>
-  <div class="list-section">
-    <h3 class="section-title">Scope of Work</h3>
-    <div class="list-items">
-      <% scope.forEach((item, index) => { %>
-      <% if (item && item.trim()) { %>
-      <div class="list-item">
-        <span class="list-number"><%= index + 1 %>.</span>
-        <div class="list-text"><%= item %></div>
+        
+        <% if (exportSettings.includeStamp) { %>
+        <div class="stamp-box">
+          <img src="/images/eurotech-stamp.jpg" alt="Company Stamp" class="stamp-image">
+          <div class="signature-line">Company Stamp</div>
+        </div>
+        <% } %>
       </div>
       <% } %>
-      <% }) %>
+      
     </div>
   </div>
-  <% } %>
-
-  <!-- Materials -->
-  <% if (materials && materials.length > 0 && materials.some(item => item && item.trim())) { %>
-  <div class="list-section">
-    <h3 class="section-title">Materials</h3>
-    <div class="list-items">
-      <% materials.forEach((item, index) => { %>
-      <% if (item && item.trim()) { %>
-      <div class="list-item">
-        <span class="list-number"><%= index + 1 %>.</span>
-        <div class="list-text"><%= item %></div>
-      </div>
-      <% } %>
-      <% }) %>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Terms & Conditions -->
-  <% if (terms && terms.length > 0 && terms.some(item => item && item.trim())) { %>
-  <div class="list-section">
-    <h3 class="section-title">Terms & Conditions</h3>
-    <div class="list-items">
-      <% terms.forEach((item, index) => { %>
-      <% if (item && item.trim()) { %>
-      <div class="list-item">
-        <span class="list-number"><%= index + 1 %>.</span>
-        <div class="list-text"><%= item %></div>
-      </div>
-      <% } %>
-      <% }) %>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Warranty Section -->
-  <div class="warranty-section">
-    <div class="warranty-title">Warranty</div>
-    <div class="warranty-period"><%= quotation.warranty || 10 %> YEARS WARRANTY</div>
-    <% if (quotation.warranty_note) { %>
-    <div class="warranty-note"><%= quotation.warranty_note %></div>
-    <% } %>
-  </div>
-
-  <!-- Footer -->
-  <div class="document-footer">
-    <p>This quotation is valid for 30 days from the date of issue.</p>
-    <p>International Pipes Technology Co LLC | CR No: 2231867 | Salalah, Sultanate of Oman</p>
-    <p>Email: eurotechoman.iptc@gmail.com | Website: www.eurotechoman.com</p>
-  </div>
-
 </body>
 </html>

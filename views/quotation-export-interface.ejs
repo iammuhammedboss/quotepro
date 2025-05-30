@@ -45,13 +45,15 @@
       gap: 12px;
     }
     
+    /* ✅ OPTIMIZED: Better preview frame */
     .preview-frame {
       border: 3px solid #e5e7eb;
       border-radius: 12px;
       background: white;
-      min-height: 600px;
+      min-height: 800px; /* Increased height */
       position: sticky;
       top: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
     }
     
     .export-btn {
@@ -147,6 +149,28 @@
       background: linear-gradient(90deg, #10b981, #059669);
       transition: width 0.3s ease;
     }
+    
+    /* ✅ Modal styles */
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+    }
+    
+    .whatsapp-frame {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    
+    /* ✅ Letterhead preview */
+    .letterhead-preview {
+      background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -174,7 +198,7 @@
   </div>
 </div>
 
-<div class="max-w-7xl mx-auto p-6">
+<div class="max-w-[1600px] mx-auto p-6"> <!-- ✅ Wider container -->
   
   <!-- Main Export Panel -->
   <div class="export-panel">
@@ -191,10 +215,80 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 xl:grid-cols-5 gap-6"> <!-- ✅ Better grid proportions -->
     
     <!-- Settings Panel -->
-    <div class="lg:col-span-2 space-y-6">
+    <div class="xl:col-span-3 space-y-6">
+      
+      <!-- File Type & Paper Settings -->
+      <div class="settings-card">
+        <div class="settings-header">
+          <span class="text-2xl">📄</span>
+          <span>File Type & Paper Settings</span>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">File Type</label>
+            <div class="grid grid-cols-4 gap-3">
+              <div class="method-card selected" data-type="pdf">
+                <div class="text-2xl mb-2">📄</div>
+                <div class="text-sm font-medium">PDF</div>
+              </div>
+              <div class="method-card" data-type="excel">
+                <div class="text-2xl mb-2">📊</div>
+                <div class="text-sm font-medium">Excel</div>
+              </div>
+              <div class="method-card" data-type="png">
+                <div class="text-2xl mb-2">🖼️</div>
+                <div class="text-sm font-medium">PNG</div>
+              </div>
+              <div class="method-card" data-type="jpg">
+                <div class="text-2xl mb-2">📷</div>
+                <div class="text-sm font-medium">JPG</div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="paperSettings">
+            <label class="block text-sm font-medium text-gray-700 mb-3">Paper & Quality</label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <select id="paperType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="plain">Plain Paper</option>
+                  <option value="draft">Draft Quality</option>
+                  <option value="letterhead-main">📋 Letterhead - Main</option>
+                  <option value="letterhead-alt">📋 Letterhead - Alternative</option>
+                  <option value="letterhead-premium">📋 Letterhead - Premium</option>
+                </select>
+              </div>
+              <div>
+                <select id="paperSize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="A4">A4 (210×297mm)</option>
+                  <option value="Letter">Letter (216×279mm)</option>
+                  <option value="Legal">Legal (216×356mm)</option>
+                  <option value="A3">A3 (297×420mm)</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- ✅ Letterhead Preview -->
+            <div id="letterheadPreview" class="hidden letterhead-preview">
+              <div class="text-2xl mb-2">📋</div>
+              <div class="text-sm text-gray-600">Letterhead will be applied as background</div>
+              <div class="text-xs text-gray-500 mt-2">Your quotation content will overlay on the letterhead image</div>
+            </div>
+          </div>
+          
+          <div id="imageSettings" class="hidden space-y-3">
+            <label class="block text-sm font-medium text-gray-700">Image Quality</label>
+            <div class="flex items-center gap-3">
+              <input type="range" id="imageQuality" class="range-input flex-1" min="60" max="100" value="90">
+              <span id="imageQualityValue" class="text-sm font-medium text-gray-600 min-w-12">90%</span>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <!-- Header Customization -->
       <div class="settings-card">
@@ -240,69 +334,6 @@
         </div>
       </div>
       
-      <!-- File Type & Paper Settings -->
-      <div class="settings-card">
-        <div class="settings-header">
-          <span class="text-2xl">📄</span>
-          <span>File Type & Paper Settings</span>
-        </div>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-3">File Type</label>
-            <div class="grid grid-cols-4 gap-3">
-              <div class="method-card selected" data-type="pdf">
-                <div class="text-2xl mb-2">📄</div>
-                <div class="text-sm font-medium">PDF</div>
-              </div>
-              <div class="method-card" data-type="excel">
-                <div class="text-2xl mb-2">📊</div>
-                <div class="text-sm font-medium">Excel</div>
-              </div>
-              <div class="method-card" data-type="png">
-                <div class="text-2xl mb-2">🖼️</div>
-                <div class="text-sm font-medium">PNG</div>
-              </div>
-              <div class="method-card" data-type="jpg">
-                <div class="text-2xl mb-2">📷</div>
-                <div class="text-sm font-medium">JPG</div>
-              </div>
-            </div>
-          </div>
-          
-          <div id="paperSettings">
-            <label class="block text-sm font-medium text-gray-700 mb-3">Paper & Quality</label>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <select id="paperType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="plain">Plain Paper</option>
-                  <option value="draft">Draft Quality</option>
-                  <option value="letterhead-1">Letterhead - Main</option>
-                  <option value="letterhead-2">Letterhead - Alternative</option>
-                  <option value="letterhead-3">Letterhead - Premium</option>
-                </select>
-              </div>
-              <div>
-                <select id="paperSize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="A4">A4 (210×297mm)</option>
-                  <option value="Letter">Letter (216×279mm)</option>
-                  <option value="Legal">Legal (216×356mm)</option>
-                  <option value="A3">A3 (297×420mm)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          
-          <div id="imageSettings" class="hidden space-y-3">
-            <label class="block text-sm font-medium text-gray-700">Image Quality</label>
-            <div class="flex items-center gap-3">
-              <input type="range" id="imageQuality" class="range-input flex-1" min="60" max="100" value="90">
-              <span id="imageQualityValue" class="text-sm font-medium text-gray-600 min-w-12">90%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
       <!-- Signature & Stamp -->
       <div class="settings-card">
         <div class="settings-header">
@@ -329,52 +360,6 @@
                   <div class="text-sm text-gray-500">Company stamp</div>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div id="stampPlacement" class="hidden">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Stamp Placement</label>
-            <div class="grid grid-cols-2 gap-3">
-              <label class="flex items-center gap-2">
-                <input type="radio" name="stampPosition" value="auto" checked class="text-blue-600">
-                <span class="text-sm">Auto (Top Right)</span>
-              </label>
-              <label class="flex items-center gap-2">
-                <input type="radio" name="stampPosition" value="manual" class="text-blue-600">
-                <span class="text-sm">Manual Position</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Font Settings -->
-      <div class="settings-card">
-        <div class="settings-header">
-          <span class="text-2xl">🔤</span>
-          <span>Typography</span>
-        </div>
-        
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Body Text</label>
-            <div class="flex items-center gap-3">
-              <input type="range" id="bodyFontSize" class="range-input flex-1" min="12" max="18" value="14">
-              <span id="bodyFontSizeValue" class="text-sm font-medium text-gray-600 min-w-12">14px</span>
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Table Text</label>
-            <div class="flex items-center gap-3">
-              <input type="range" id="tableFontSize" class="range-input flex-1" min="10" max="16" value="12">
-              <span id="tableFontSizeValue" class="text-sm font-medium text-gray-600 min-w-12">12px</span>
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Small Text</label>
-            <div class="flex items-center gap-3">
-              <input type="range" id="smallFontSize" class="range-input flex-1" min="9" max="14" value="11">
-              <span id="smallFontSizeValue" class="text-sm font-medium text-gray-600 min-w-12">11px</span>
             </div>
           </div>
         </div>
@@ -405,6 +390,30 @@
               <div class="text-xs text-gray-500 mt-1">Share on WhatsApp</div>
             </div>
           </div>
+          
+          <!-- ✅ Enhanced Email Configuration -->
+          <div id="emailConfig" class="hidden space-y-3 bg-blue-50 p-4 rounded-lg">
+            <div class="font-medium text-blue-800 mb-2">📧 Email Configuration</div>
+            <div class="grid grid-cols-2 gap-3">
+              <input type="email" id="emailTo" placeholder="Recipient email..." class="px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <input type="text" id="emailSubject" placeholder="Email subject..." class="px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <textarea id="emailBody" rows="3" placeholder="Email message..." class="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+          </div>
+          
+          <!-- ✅ Enhanced WhatsApp Configuration -->
+          <div id="whatsappConfig" class="hidden space-y-3 bg-green-50 p-4 rounded-lg">
+            <div class="font-medium text-green-800 mb-2">💬 WhatsApp Configuration</div>
+            <div class="grid grid-cols-2 gap-3">
+              <input type="tel" id="whatsappPhone" placeholder="Phone number..." class="px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+              <select id="whatsappTemplate" class="px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <option value="professional">Professional Template</option>
+                <option value="simple">Simple Template</option>
+                <option value="detailed">Detailed Template</option>
+              </select>
+            </div>
+            <div class="text-xs text-green-600">📱 Phone format: +968XXXXXXXX</div>
+          </div>
         </div>
       </div>
       
@@ -432,26 +441,110 @@
       
     </div>
     
-    <!-- Preview Panel -->
-    <div class="lg:col-span-1">
-      <div class="settings-card">
+    <!-- ✅ OPTIMIZED: Better Preview Panel -->
+    <div class="xl:col-span-2">
+      <div class="settings-card h-full">
         <div class="settings-header">
           <span class="text-2xl">👁️</span>
           <span>Live Preview</span>
+          <div class="ml-auto flex gap-2">
+            <button id="fullscreenBtn" class="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200">
+              ⛶ Fullscreen
+            </button>
+            <button id="refreshPreviewBtn" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+              🔄 Refresh
+            </button>
+          </div>
         </div>
         
         <div class="preview-frame">
           <iframe id="previewFrame" src="/quotations/export/<%= quotation.id %>/preview" class="w-full h-full border-0 rounded-lg"></iframe>
         </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ✅ Enhanced WhatsApp Modal -->
+<div id="whatsappModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-auto shadow-2xl">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-green-700">📱 WhatsApp Integration</h2>
+      <button id="closeWhatsappModal" class="text-gray-500 hover:text-gray-700 text-3xl transition-colors">&times;</button>
+    </div>
+    
+    <div class="space-y-6">
+      <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+        <h3 class="font-medium text-green-800 mb-3">📝 How to Share:</h3>
+        <ol class="text-sm text-green-700 space-y-2">
+          <li><strong>Step 1:</strong> Document will download automatically</li>
+          <li><strong>Step 2:</strong> WhatsApp Web will open in new tab</li>
+          <li><strong>Step 3:</strong> Find contact: <strong><%= quotation.client_name %> (<%= quotation.client_phone || 'N/A' %>)</strong></li>
+          <li><strong>Step 4:</strong> Attach the downloaded document</li>
+          <li><strong>Step 5:</strong> Use the caption provided below</li>
+        </ol>
+      </div>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <h4 class="font-medium text-gray-800">📎 Document Info:</h4>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-sm space-y-1">
+              <div><strong>File:</strong> <span id="downloadFileName">quotation.pdf</span></div>
+              <div><strong>Size:</strong> <span id="downloadFileSize">~1.2 MB</span></div>
+              <div><strong>Type:</strong> Professional PDF</div>
+            </div>
+          </div>
+          
+          <div class="flex gap-3">
+            <button id="downloadForWhatsApp" class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors">
+              📥 Download Document
+            </button>
+            <button id="openWhatsApp" class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+              💬 Open WhatsApp
+            </button>
+          </div>
+        </div>
         
-        <div class="mt-4 text-center">
-          <button id="refreshPreviewBtn" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm">
-            🔄 Refresh Preview
+        <div class="space-y-4">
+          <h4 class="font-medium text-gray-800">📝 Message Caption:</h4>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <textarea id="whatsappCaption" readonly class="w-full h-40 text-xs text-gray-700 bg-transparent border-0 resize-none" style="font-family: monospace;">📋 *QUOTATION DETAILS*
+
+🏢 *Client:* <%= quotation.client_name %>
+📱 *Phone:* <%= quotation.client_phone || 'N/A' %>
+📍 *Location:* <%= quotation.project_location || 'N/A' %>
+💰 *Total Amount:* OMR <%= parseFloat(quotation.grand_total).toFixed(3) %>
+📅 *Date:* <%= new Date(quotation.tdate).toLocaleDateString('en-GB') %>
+🔢 *Quote No:* <%= quotation.quotation_no %>
+
+💧 *International Pipes Technology Co LLC*
+🌐 Your Waterproofing Specialist
+
+📞 Contact: +968 96030210
+✉️ Email: eurotechoman.iptc@gmail.com</textarea>
+          </div>
+          
+          <button id="copyCaption" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
+            📋 Copy Caption
           </button>
         </div>
       </div>
     </div>
-    
+  </div>
+</div>
+
+<!-- ✅ Fullscreen Preview Modal -->
+<div id="fullscreenModal" class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50">
+  <div class="w-full h-full p-4 flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-white text-xl font-bold">📄 Fullscreen Preview</h3>
+      <button id="closeFullscreen" class="text-white hover:text-gray-300 text-3xl">&times;</button>
+    </div>
+    <div class="flex-1 bg-white rounded-lg overflow-hidden">
+      <iframe id="fullscreenFrame" class="w-full h-full border-0"></iframe>
+    </div>
   </div>
 </div>
 
@@ -473,6 +566,8 @@ let currentSettings = {
   stampPosition: 'auto',
   exportMethod: 'download'
 };
+
+let currentDocument = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -548,6 +643,15 @@ function initializeEventListeners() {
   // Paper settings
   document.getElementById('paperType').addEventListener('change', function() {
     currentSettings.paperType = this.value;
+    
+    // Show/hide letterhead preview
+    const letterheadPreview = document.getElementById('letterheadPreview');
+    if (this.value.includes('letterhead')) {
+      letterheadPreview.classList.remove('hidden');
+    } else {
+      letterheadPreview.classList.add('hidden');
+    }
+    
     updatePreview();
   });
   
@@ -561,7 +665,6 @@ function initializeEventListeners() {
   const stampCard = document.getElementById('stampCard');
   const signatureCheckbox = document.getElementById('includeSignature');
   const stampCheckbox = document.getElementById('includeStamp');
-  const stampPlacement = document.getElementById('stampPlacement');
   
   signatureCard.addEventListener('click', function() {
     signatureCheckbox.checked = !signatureCheckbox.checked;
@@ -574,20 +677,7 @@ function initializeEventListeners() {
     stampCheckbox.checked = !stampCheckbox.checked;
     this.classList.toggle('checked', stampCheckbox.checked);
     currentSettings.includeStamp = stampCheckbox.checked;
-    
-    if (stampCheckbox.checked) {
-      stampPlacement.classList.remove('hidden');
-    } else {
-      stampPlacement.classList.add('hidden');
-    }
     updatePreview();
-  });
-  
-  document.querySelectorAll('input[name="stampPosition"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      currentSettings.stampPosition = this.value;
-      updatePreview();
-    });
   });
   
   // Export method selection
@@ -597,15 +687,38 @@ function initializeEventListeners() {
       this.classList.add('selected');
       
       currentSettings.exportMethod = this.dataset.method;
+      
+      // Show/hide relevant configurations
+      document.getElementById('emailConfig').classList.toggle('hidden', currentSettings.exportMethod !== 'email');
+      document.getElementById('whatsappConfig').classList.toggle('hidden', currentSettings.exportMethod !== 'whatsapp');
+      
+      // Pre-fill email/whatsapp fields
+      if (currentSettings.exportMethod === 'email') {
+        document.getElementById('emailTo').value = '<%= quotation.client_email || "" %>';
+        document.getElementById('emailSubject').value = `Quotation <%= quotation.quotation_no %> - <%= quotation.client_name %>`;
+        document.getElementById('emailBody').value = `Dear <%= quotation.client_name %>,\n\nPlease find attached your quotation for the requested services.\n\nBest regards,\nInternational Pipes Technology Co LLC`;
+      } else if (currentSettings.exportMethod === 'whatsapp') {
+        document.getElementById('whatsappPhone').value = '<%= quotation.client_phone || "" %>';
+      }
     });
   });
   
-  // Preview button
+  // Preview buttons
   document.getElementById('previewBtn').addEventListener('click', updatePreview);
   document.getElementById('refreshPreviewBtn').addEventListener('click', updatePreview);
   
+  // Fullscreen preview
+  document.getElementById('fullscreenBtn').addEventListener('click', openFullscreenPreview);
+  document.getElementById('closeFullscreen').addEventListener('click', closeFullscreenPreview);
+  
   // Export button
   document.getElementById('exportBtn').addEventListener('click', handleExport);
+  
+  // WhatsApp modal
+  document.getElementById('closeWhatsappModal').addEventListener('click', closeWhatsAppModal);
+  document.getElementById('downloadForWhatsApp').addEventListener('click', downloadForWhatsApp);
+  document.getElementById('openWhatsApp').addEventListener('click', openWhatsApp);
+  document.getElementById('copyCaption').addEventListener('click', copyCaption);
 }
 
 function updatePreview() {
@@ -627,10 +740,32 @@ function updatePreview() {
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     previewFrame.src = url;
+    
+    // Update fullscreen frame if open
+    const fullscreenFrame = document.getElementById('fullscreenFrame');
+    if (fullscreenFrame.src) {
+      fullscreenFrame.src = url;
+    }
   })
   .catch(err => {
     console.error('Preview error:', err);
   });
+}
+
+function openFullscreenPreview() {
+  const modal = document.getElementById('fullscreenModal');
+  const fullscreenFrame = document.getElementById('fullscreenFrame');
+  const previewFrame = document.getElementById('previewFrame');
+  
+  fullscreenFrame.src = previewFrame.src;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeFullscreenPreview() {
+  const modal = document.getElementById('fullscreenModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
 }
 
 function handleExport() {
@@ -661,11 +796,21 @@ function handleExport() {
     }
   }, 200);
   
-  // Create form data
+  // Prepare form data with additional settings
   const formData = new FormData();
   Object.keys(currentSettings).forEach(key => {
     formData.append(key, currentSettings[key]);
   });
+  
+  // Add email/whatsapp specific data
+  if (currentSettings.exportMethod === 'email') {
+    formData.append('emailTo', document.getElementById('emailTo').value);
+    formData.append('emailSubject', document.getElementById('emailSubject').value);
+    formData.append('emailBody', document.getElementById('emailBody').value);
+  } else if (currentSettings.exportMethod === 'whatsapp') {
+    formData.append('whatsappPhone', document.getElementById('whatsappPhone').value);
+    formData.append('whatsappTemplate', document.getElementById('whatsappTemplate').value);
+  }
   
   // Make export request
   fetch(`/quotations/export/<%= quotation.id %>/generate`, {
@@ -727,15 +872,97 @@ function getFileName() {
 }
 
 function handleEmailExport(emailData) {
-  const subject = encodeURIComponent(emailData.subject);
-  const body = encodeURIComponent(emailData.body);
-  const mailto = `mailto:${emailData.to}?subject=${subject}&body=${body}`;
+  // Enhanced email handling with attachment support
+  const emailUrl = `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
   
-  window.open(mailto);
+  // Open email client
+  window.open(emailUrl);
+  
+  // Also trigger download since we can't attach files to mailto
+  setTimeout(() => {
+    handleExport(); // This will download the file
+    alert('📧 Email client opened! Please attach the downloaded file manually.');
+  }, 1000);
 }
 
 function handleWhatsAppExport(whatsappData) {
-  alert('WhatsApp export completed! Document prepared for sharing.');
+  currentDocument = whatsappData.document;
+  
+  // Update modal with document info
+  document.getElementById('downloadFileName').textContent = whatsappData.document.filename;
+  document.getElementById('downloadFileSize').textContent = `~${Math.round(whatsappData.document.content.length * 0.75 / 1024)} KB`;
+  
+  // Show WhatsApp modal
+  document.getElementById('whatsappModal').classList.remove('hidden');
+  document.getElementById('whatsappModal').classList.add('flex');
+}
+
+function closeWhatsAppModal() {
+  document.getElementById('whatsappModal').classList.add('hidden');
+  document.getElementById('whatsappModal').classList.remove('flex');
+}
+
+function downloadForWhatsApp() {
+  if (!currentDocument) {
+    alert('No document available. Please export first.');
+    return;
+  }
+  
+  // Convert base64 to blob
+  const byteCharacters = atob(currentDocument.content);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: currentDocument.contentType });
+  
+  // Create download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = currentDocument.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  // Show success message
+  document.getElementById('downloadForWhatsApp').innerHTML = '✅ Downloaded!';
+  setTimeout(() => {
+    document.getElementById('downloadForWhatsApp').innerHTML = '📥 Download Document';
+  }, 3000);
+}
+
+function openWhatsApp() {
+  const phone = document.getElementById('whatsappPhone').value || '<%= quotation.client_phone || "" %>';
+  let whatsappUrl = 'https://web.whatsapp.com/';
+  
+  if (phone) {
+    // Format phone number (remove non-digits and add country code if needed)
+    const cleanPhone = phone.replace(/\D/g, '');
+    const formattedPhone = cleanPhone.startsWith('968') ? cleanPhone : '968' + cleanPhone;
+    whatsappUrl = `https://web.whatsapp.com/send?phone=${formattedPhone}`;
+  }
+  
+  window.open(whatsappUrl, '_blank');
+}
+
+function copyCaption() {
+  const caption = document.getElementById('whatsappCaption');
+  caption.select();
+  document.execCommand('copy');
+  
+  // Show success message
+  document.getElementById('copyCaption').innerHTML = '✅ Copied!';
+  setTimeout(() => {
+    document.getElementById('copyCaption').innerHTML = '📋 Copy Caption';
+  }, 2000);
+  
+  // Also copy to clipboard API if available
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(caption.value);
+  }
 }
 
 // Keyboard shortcuts
@@ -750,9 +977,113 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         handleExport();
         break;
+      case 'f':
+        e.preventDefault();
+        openFullscreenPreview();
+        break;
     }
   }
+  
+  // ESC to close modals
+  if (e.key === 'Escape') {
+    closeFullscreenPreview();
+    closeWhatsAppModal();
+  }
 });
+
+// Auto-save settings
+function saveSettingsToStorage() {
+  localStorage.setItem('quotepro_export_settings', JSON.stringify(currentSettings));
+}
+
+function loadSettingsFromStorage() {
+  const saved = localStorage.getItem('quotepro_export_settings');
+  if (saved) {
+    try {
+      const settings = JSON.parse(saved);
+      currentSettings = { ...currentSettings, ...settings };
+      updateUIFromSettings();
+    } catch (e) {
+      console.warn('Failed to load saved settings:', e);
+    }
+  }
+}
+
+function updateUIFromSettings() {
+  // Update file type selection
+  document.querySelectorAll('[data-type]').forEach(card => {
+    card.classList.toggle('selected', card.dataset.type === currentSettings.fileType);
+  });
+  
+  // Update export method selection
+  document.querySelectorAll('[data-method]').forEach(card => {
+    card.classList.toggle('selected', card.dataset.method === currentSettings.exportMethod);
+  });
+  
+  // Update form inputs
+  document.getElementById('paperType').value = currentSettings.paperType;
+  document.getElementById('paperSize').value = currentSettings.paperSize;
+  document.getElementById('customHeader').value = currentSettings.customHeader;
+  
+  // Update checkboxes
+  const signatureCheckbox = document.getElementById('includeSignature');
+  const stampCheckbox = document.getElementById('includeStamp');
+  const signatureCard = document.getElementById('signatureCard');
+  const stampCard = document.getElementById('stampCard');
+  
+  signatureCheckbox.checked = currentSettings.includeSignature;
+  stampCheckbox.checked = currentSettings.includeStamp;
+  signatureCard.classList.toggle('checked', currentSettings.includeSignature);
+  stampCard.classList.toggle('checked', currentSettings.includeStamp);
+  
+  // Update sliders
+  const sliders = ['headerFontSize', 'bodyFontSize', 'tableFontSize', 'smallFontSize', 'qrSize', 'imageQuality'];
+  sliders.forEach(slider => {
+    const element = document.getElementById(slider);
+    const valueSpan = document.getElementById(slider + 'Value');
+    const value = parseInt(currentSettings[slider]) || element.value;
+    
+    element.value = value;
+    const unit = slider.includes('FontSize') ? 'px' : (slider === 'qrSize' ? 'px' : '%');
+    valueSpan.textContent = value + unit;
+  });
+  
+  // Show/hide relevant sections based on current settings
+  const paperSettings = document.getElementById('paperSettings');
+  const imageSettings = document.getElementById('imageSettings');
+  const letterheadPreview = document.getElementById('letterheadPreview');
+  
+  if (currentSettings.fileType === 'png' || currentSettings.fileType === 'jpg') {
+    paperSettings.classList.add('hidden');
+    imageSettings.classList.remove('hidden');
+  } else if (currentSettings.fileType === 'excel') {
+    paperSettings.classList.add('hidden');
+    imageSettings.classList.add('hidden');
+  } else {
+    paperSettings.classList.remove('hidden');
+    imageSettings.classList.add('hidden');
+  }
+  
+  if (currentSettings.paperType.includes('letterhead')) {
+    letterheadPreview.classList.remove('hidden');
+  } else {
+    letterheadPreview.classList.add('hidden');
+  }
+  
+  // Show/hide export method configurations
+  document.getElementById('emailConfig').classList.toggle('hidden', currentSettings.exportMethod !== 'email');
+  document.getElementById('whatsappConfig').classList.toggle('hidden', currentSettings.exportMethod !== 'whatsapp');
+}
+
+// Load saved settings on page load
+window.addEventListener('load', loadSettingsFromStorage);
+
+// Save settings whenever they change
+const originalUpdatePreview = updatePreview;
+updatePreview = function() {
+  saveSettingsToStorage();
+  originalUpdatePreview();
+};
 </script>
 
 </body>

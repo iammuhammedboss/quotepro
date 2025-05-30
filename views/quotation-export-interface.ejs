@@ -1157,4 +1157,298 @@ updatePreview = function() {
 </script>
 
 </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Export Quotation #<%= quotation.quotation_no %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50" style="font-family: 'Outfit', sans-serif;">
+
+<!-- Header -->
+<div class="bg-red-700 text-white px-6 py-4">
+  <h1 class="text-xl font-bold">Export Quotation #<%= quotation.quotation_no %></h1>
+</div>
+
+<div class="max-w-6xl mx-auto p-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    
+    <!-- Settings Panel -->
+    <div class="space-y-6">
+      
+      <!-- File Type Selection -->
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">📄 File Type</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500 file-type-option">
+            <input type="radio" name="fileType" value="pdf" checked class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">📄</div>
+              <div class="font-medium">PDF</div>
+            </div>
+          </label>
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500 file-type-option">
+            <input type="radio" name="fileType" value="excel" class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">📊</div>
+              <div class="font-medium">Excel</div>
+            </div>
+          </label>
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500 file-type-option">
+            <input type="radio" name="fileType" value="png" class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">🖼️</div>
+              <div class="font-medium">PNG</div>
+            </div>
+          </label>
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500 file-type-option">
+            <input type="radio" name="fileType" value="jpg" class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">📷</div>
+              <div class="font-medium">JPG</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Export Method -->
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">🚀 Export Method</h3>
+        <div class="grid grid-cols-3 gap-3">
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-green-500 export-method-option">
+            <input type="radio" name="exportMethod" value="download" checked class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">⬇️</div>
+              <div class="font-medium">Download</div>
+            </div>
+          </label>
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-green-500 export-method-option">
+            <input type="radio" name="exportMethod" value="email" class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">📧</div>
+              <div class="font-medium">Email</div>
+            </div>
+          </label>
+          <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-green-500 export-method-option">
+            <input type="radio" name="exportMethod" value="whatsapp" class="sr-only">
+            <div class="text-center">
+              <div class="text-2xl mb-2">💬</div>
+              <div class="font-medium">WhatsApp</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Header Customization -->
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">✏️ Header</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Heading</label>
+            <select id="customHeader" class="w-full p-2 border border-gray-300 rounded">
+              <option value="QUOTATION FOR WATERPROOFING">Quotation for Waterproofing</option>
+              <option value="QUOTATION FOR EPOXY WORKS">Quotation for Epoxy Works</option>
+              <option value="QUOTATION FOR PAINTING WORKS">Quotation for Painting Works</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Button -->
+      <div class="bg-white p-6 rounded-lg shadow">
+        <button id="exportBtn" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+          🚀 Export Now
+        </button>
+        <div id="exportProgress" class="hidden mt-4">
+          <div class="bg-gray-200 rounded-full h-2">
+            <div id="progressBar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <p id="progressText" class="text-sm text-gray-600 mt-2">Preparing export...</p>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- Preview Panel -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">👁️ Live Preview</h3>
+      <div class="border rounded-lg" style="height: 600px;">
+        <iframe id="previewFrame" src="/quotations/export/<%= quotation.id %>/preview" class="w-full h-full border-0 rounded-lg"></iframe>
+      </div>
+      <button id="refreshPreviewBtn" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+        🔄 Refresh Preview
+      </button>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+// Get current settings
+function getCurrentSettings() {
+  const fileType = document.querySelector('input[name="fileType"]:checked')?.value || 'pdf';
+  const exportMethod = document.querySelector('input[name="exportMethod"]:checked')?.value || 'download';
+  const customHeader = document.getElementById('customHeader')?.value || 'QUOTATION FOR WATERPROOFING';
+  
+  return {
+    fileType,
+    exportMethod,
+    customHeader,
+    headerFontSize: '28px',
+    bodyFontSize: '14px',
+    tableFontSize: '12px',
+    qrSize: '100',
+    paperSize: 'A4'
+  };
+}
+
+// Update preview
+function updatePreview() {
+  const settings = getCurrentSettings();
+  const iframe = document.getElementById('previewFrame');
+  
+  // Create form data
+  const formData = new FormData();
+  Object.keys(settings).forEach(key => {
+    formData.append(key, settings[key]);
+  });
+  
+  // Update preview via POST
+  fetch(`/quotations/export/<%= quotation.id %>/preview`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.text())
+  .then(html => {
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    iframe.src = url;
+  })
+  .catch(err => {
+    console.error('Preview error:', err);
+  });
+}
+
+// Handle export
+function handleExport() {
+  const exportBtn = document.getElementById('exportBtn');
+  const progressDiv = document.getElementById('exportProgress');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  
+  const settings = getCurrentSettings();
+  
+  console.log('Exporting with settings:', settings);
+  
+  // Show progress
+  exportBtn.disabled = true;
+  progressDiv.classList.remove('hidden');
+  
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress += 10;
+    if (progress > 90) progress = 90;
+    progressBar.style.width = progress + '%';
+  }, 200);
+  
+  // Create form data
+  const formData = new FormData();
+  Object.keys(settings).forEach(key => {
+    formData.append(key, settings[key]);
+  });
+  
+  // Make export request
+  fetch(`/quotations/export/<%= quotation.id %>/generate`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    clearInterval(progressInterval);
+    progressBar.style.width = '100%';
+    progressText.textContent = 'Export complete!';
+    
+    if (settings.exportMethod === 'download') {
+      return response.blob().then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quotation-${new Date().getTime()}.${settings.fileType === 'excel' ? 'xlsx' : settings.fileType}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    } else {
+      return response.json();
+    }
+  })
+  .then(data => {
+    if (data && data.action === 'email') {
+      alert('Email feature coming soon!');
+    } else if (data && data.action === 'whatsapp') {
+      alert('WhatsApp feature coming soon!');
+    }
+    
+    // Reset UI
+    setTimeout(() => {
+      exportBtn.disabled = false;
+      progressDiv.classList.add('hidden');
+      progressBar.style.width = '0%';
+    }, 2000);
+  })
+  .catch(err => {
+    console.error('Export error:', err);
+    clearInterval(progressInterval);
+    exportBtn.disabled = false;
+    progressDiv.classList.add('hidden');
+    alert('Export failed: ' + err.message);
+  });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // File type selection styling
+  document.querySelectorAll('.file-type-option').forEach(option => {
+    option.addEventListener('click', function() {
+      document.querySelectorAll('.file-type-option').forEach(o => {
+        o.classList.remove('border-blue-500', 'bg-blue-50');
+        o.classList.add('border-gray-300');
+      });
+      this.classList.remove('border-gray-300');
+      this.classList.add('border-blue-500', 'bg-blue-50');
+      updatePreview();
+    });
+  });
+  
+  // Export method selection styling
+  document.querySelectorAll('.export-method-option').forEach(option => {
+    option.addEventListener('click', function() {
+      document.querySelectorAll('.export-method-option').forEach(o => {
+        o.classList.remove('border-green-500', 'bg-green-50');
+        o.classList.add('border-gray-300');
+      });
+      this.classList.remove('border-gray-300');
+      this.classList.add('border-green-500', 'bg-green-50');
+    });
+  });
+  
+  // Header change
+  document.getElementById('customHeader').addEventListener('change', updatePreview);
+  
+  // Export button
+  document.getElementById('exportBtn').addEventListener('click', handleExport);
+  
+  // Refresh preview
+  document.getElementById('refreshPreviewBtn').addEventListener('click', updatePreview);
+  
+  // Set initial selection styling
+  document.querySelector('.file-type-option').classList.add('border-blue-500', 'bg-blue-50');
+  document.querySelector('.export-method-option').classList.add('border-green-500', 'bg-green-50');
+});
+</script>
+
+</body>
 </html>

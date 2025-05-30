@@ -1,4 +1,4 @@
-// routes/quotation.js - COMPLETE CLEAN VERSION
+// routes/quotation.js - COMPLETE FIXED VERSION
 const express = require('express');
 const router = express.Router();
 const db = require('../models/db');
@@ -44,7 +44,7 @@ router.get('/quotations/create', async (req, res) => {
   res.render('quotation-form', { mode, quotation, items, scope, materials, terms });
 });
 
-// 🟢 Save new quotation
+// 🟢 Save new quotation - FIXED VERSION
 router.post('/save-quotation', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
@@ -68,14 +68,16 @@ router.post('/save-quotation', async (req, res) => {
     const materialsData = materials ? JSON.parse(materials) : [];
     const termsData = terms ? JSON.parse(terms) : [];
 
-    // Helper function to find or create client
+    // ✅ FIXED: Helper function to find or create client
     async function findOrCreateClient(name, phone) {
+      // ✅ If BOTH name and phone are provided, find or create
       if (name && name.trim() && phone && phone.trim()) {
         const trimmedName = name.trim();
         const trimmedPhone = phone.trim();
         
         console.log(`🔍 Looking for client: "${trimmedName}" with phone: "${trimmedPhone}"`);
         
+        // First try to find existing client with EXACT match (name + phone)
         const [existing] = await db.query(
           'SELECT id FROM clients WHERE LOWER(TRIM(name)) = LOWER(?) AND TRIM(phone) = ? LIMIT 1',
           [trimmedName, trimmedPhone]
@@ -86,6 +88,7 @@ router.post('/save-quotation', async (req, res) => {
           return existing[0].id;
         }
         
+        // ✅ NOT FOUND → Create new client automatically
         console.log(`🆕 Creating new client: "${trimmedName}" with phone: "${trimmedPhone}"`);
         const [result] = await db.query(
           'INSERT INTO clients (name, phone) VALUES (?, ?)',
@@ -96,10 +99,11 @@ router.post('/save-quotation', async (req, res) => {
         return result.insertId;
       }
       
+      // ✅ If name OR phone is missing, return NULL (for optional fields like contractor, etc.)
       return null;
     }
 
-    // Get or create client IDs
+    // ✅ Get or create client IDs - ALL will auto-create if name+phone provided
     const client_id = await findOrCreateClient(client_name, client_phone);
     const contractor_id = await findOrCreateClient(contractor_name, contractor_phone);
     const subcontractor_id = await findOrCreateClient(subcontractor_name, subcontractor_phone);
@@ -114,6 +118,7 @@ router.post('/save-quotation', async (req, res) => {
       attention_id
     });
 
+    // ✅ Check if main client_id is NULL (only fail if main client info missing)
     if (!client_id) {
       console.log('❌ Main client_id is NULL - name or phone missing');
       return res.status(400).json({ 
@@ -122,7 +127,7 @@ router.post('/save-quotation', async (req, res) => {
       });
     }
 
-    // Insert quotation
+    // Insert quotation using YOUR exact schema
     const [result] = await db.query(`
       INSERT INTO quotations (
         quotation_no, tdate, client_id, contractor_id, engineer_id, subcontractor_id, attention_id,
@@ -141,7 +146,7 @@ router.post('/save-quotation', async (req, res) => {
     const quotationId = result.insertId;
     console.log(`✅ Quotation saved with ID: ${quotationId}`);
 
-    // Insert related data
+    // Insert items using YOUR exact table name and schema
     if (itemsData.length > 0) {
       const itemValues = itemsData.map(item => [
         quotationId, item.description, item.qty, item.unit, item.rate, item.amount
@@ -153,6 +158,7 @@ router.post('/save-quotation', async (req, res) => {
       console.log(`✅ Inserted ${itemsData.length} items`);
     }
 
+    // Insert scope using YOUR exact table name and schema
     if (scopeData.length > 0) {
       const scopeValues = scopeData.map((text) => [quotationId, text]);
       await db.query(`
@@ -162,6 +168,7 @@ router.post('/save-quotation', async (req, res) => {
       console.log(`✅ Inserted ${scopeData.length} scope items`);
     }
 
+    // Insert materials using YOUR exact table name and schema
     if (materialsData.length > 0) {
       const materialValues = materialsData.map((text) => [quotationId, text]);
       await db.query(`
@@ -171,6 +178,7 @@ router.post('/save-quotation', async (req, res) => {
       console.log(`✅ Inserted ${materialsData.length} materials`);
     }
 
+    // Insert terms using YOUR exact table name and schema
     if (termsData.length > 0) {
       const termValues = termsData.map((text) => [quotationId, text]);
       await db.query(`
@@ -199,7 +207,7 @@ router.get('/quotations/search', (req, res) => {
   res.render('quotation-search', { user: req.session.user });
 });
 
-// 🟢 Search quotations with phone number support
+// 🟢 ✅ UPDATED SEARCH WITH PHONE NUMBER SUPPORT
 router.get('/quotations/search-data', async (req, res) => {
   const q = req.query.q || '';
   const like = `%${q}%`;
@@ -209,6 +217,7 @@ router.get('/quotations/search-data', async (req, res) => {
   try {
     console.log('🔍 Searching for:', q);
     
+    // ✅ ENHANCED SEARCH WITH PHONE NUMBERS
     const [results] = await db.query(`
       SELECT 
         q.id, 
@@ -267,6 +276,7 @@ router.get('/quotations/edit/:id', async (req, res) => {
   try {
     const quotationId = req.params.id;
 
+    // Get quotation with client details using YOUR exact schema
     const [quotationRows] = await db.query(`
       SELECT 
         q.*,
@@ -290,18 +300,25 @@ router.get('/quotations/edit/:id', async (req, res) => {
 
     const quotation = quotationRows[0];
 
+    // Get items using YOUR exact table name
     const [itemRows] = await db.query(
       'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
       [quotationId]
     );
+
+    // Get scope using YOUR exact table name and column
     const [scopeRows] = await db.query(
       'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
       [quotationId]
     );
+
+    // Get materials using YOUR exact table name and column
     const [materialRows] = await db.query(
       'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
       [quotationId]
     );
+
+    // Get terms using YOUR exact table name and column
     const [termRows] = await db.query(
       'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
       [quotationId]
@@ -321,7 +338,7 @@ router.get('/quotations/edit/:id', async (req, res) => {
   }
 });
 
-// 🟢 Update existing quotation
+// 🟢 Update existing quotation - FIXED VERSION
 router.post('/quotations/update/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
@@ -346,7 +363,248 @@ router.post('/quotations/update/:id', async (req, res) => {
     const materialsData = materials ? JSON.parse(materials) : [];
     const termsData = terms ? JSON.parse(terms) : [];
 
-    // Same helper function
+    // ✅ Same fixed helper function
+    async function findOrCreateClient(name, phone) {
+      if (name && name.trim() && phone && phone.trim()) {
+        const trimmedName = name.trim();
+        const trimmedPhone = phone.trim();
+        
+        console.log(`🔍 Looking for client: "${trimmedName}" with phone: "${trimmedPhone}"`);
+        
+        const [existing] = await db.query(
+          'SELECT id FROM clients WHERE LOWER(TRIM(name)) = LOWER(?) AND TRIM(phone) = ? LIMIT 1',
+          [trimmedName, trimmedPhone]
+        );
+        
+        if (existing.length > 0) {
+          console.log(`✅ Found existing client with ID: ${existing[0].id}`);
+          return existing[0].id;
+        }
+        
+        console.log(`🆕 Creating new client: "${trimmedName}" with phone: "${trimmedPhone}"`);
+        const [result] = await db.query(
+          'INSERT INTO clients (name, phone) VALUES (?, ?)',
+          [trimmedName, trimmedPhone]
+        );
+        
+        console.log(`✅ Created new client with ID: ${result.insertId}`);
+        return result.insertId;
+      }
+      
+      return null;
+    }
+
+    // Get or create client IDs
+    const client_id = await findOrCreateClient(client_name, client_phone);
+    const contractor_id = await findOrCreateClient(contractor_name, contractor_phone);
+    const subcontractor_id = await findOrCreateClient(subcontractor_name, subcontractor_phone);
+    const engineer_id = await findOrCreateClient(engineer_name, engineer_phone);
+    const attention_id = await findOrCreateClient(attention_name, attention_phone);
+
+    console.log('📊 Client IDs for update:', {
+      client_id,
+      contractor_id, 
+      subcontractor_id,
+      engineer_id,
+      attention_id
+    });
+
+    // ✅ Check if main client_id is NULL
+    if (!client_id) {
+      console.log('❌ Main client_id is NULL - name or phone missing');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Client name and phone are required for the main client.' 
+      });
+    }
+
+    // Update quotation using YOUR exact schema
+    await db.query(`
+      UPDATE quotations SET
+        quotation_no = ?, tdate = ?, client_id = ?, contractor_id = ?, engineer_id = ?, subcontractor_id = ?, attention_id = ?,
+        ref_no = ?, ref_date = ?, description = ?, project_location = ?, warranty = ?, warranty_note = ?,
+        total_amount = ?, discount = ?, vat_rate = ?, vat_amount = ?, round_off = ?, grand_total = ?,
+        show_scope_slno = ?, show_material_slno = ?, show_term_slno = ?
+      WHERE id = ?
+    `, [
+      quotation_no, tdate, client_id, contractor_id, engineer_id, subcontractor_id, attention_id,
+      ref_no || null, ref_date || null, description || null, project_location, warranty, warranty_note || null,
+      total_amount, discount, vat_rate, vat_amount, round_off, grand_total,
+      show_scope_slno ? 1 : 0, show_material_slno ? 1 : 0, show_term_slno ? 1 : 0,
+      quotationId
+    ]);
+
+    console.log(`✅ Quotation ${quotationId} updated`);
+
+    // Delete existing related records using YOUR exact table names
+    await db.query('DELETE FROM quotation_item_lines WHERE quotation_id = ?', [quotationId]);
+    await db.query('DELETE FROM quotation_scope WHERE quotation_id = ?', [quotationId]);
+    await db.query('DELETE FROM quotation_materials WHERE quotation_id = ?', [quotationId]);
+    await db.query('DELETE FROM quotation_terms WHERE quotation_id = ?', [quotationId]);
+
+    // Insert updated items
+    if (itemsData.length > 0) {
+      const itemValues = itemsData.map(item => [
+        quotationId, item.description, item.qty, item.unit, item.rate, item.amount
+      ]);
+      await db.query(`
+        INSERT INTO quotation_item_lines (quotation_id, description, qty, unit, rate, amount)
+        VALUES ?
+      `, [itemValues]);
+      console.log(`✅ Updated ${itemsData.length} items`);
+    }
+
+    // Insert updated scope
+    if (scopeData.length > 0) {
+      const scopeValues = scopeData.map((text) => [quotationId, text]);
+      await db.query(`
+        INSERT INTO quotation_scope (quotation_id, scope)
+        VALUES ?
+      `, [scopeValues]);
+      console.log(`✅ Updated ${scopeData.length} scope items`);
+    }
+
+    // Insert updated materials
+    if (materialsData.length > 0) {
+      const materialValues = materialsData.map((text) => [quotationId, text]);
+      await db.query(`
+        INSERT INTO quotation_materials (quotation_id, material)
+        VALUES ?
+      `, [materialValues]);
+      console.log(`✅ Updated ${materialsData.length} materials`);
+    }
+
+    // Insert updated terms
+    if (termsData.length > 0) {
+      const termValues = termsData.map((text) => [quotationId, text]);
+      await db.query(`
+        INSERT INTO quotation_terms (quotation_id, term)
+        VALUES ?
+      `, [termValues]);
+      console.log(`✅ Updated ${termsData.length} terms`);
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Quotation updated successfully!',
+      redirectTo: `/quotations/view/${quotationId}` 
+    });
+
+  } catch (err) {
+    console.error('❌ Update quotation error:', err);
+    res.status(500).json({ success: false, error: 'Failed to update quotation', details: err.message });
+  }
+});
+
+// 🟢 Show freeze view (read-only quotation display)
+router.get('/quotations/view/:id', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  try {
+    const quotationId = req.params.id;
+
+    // Get quotation with client details using YOUR exact schema
+    const [quotationRows] = await db.query(`
+      SELECT 
+        q.*,
+        c.name as client_name, c.phone as client_phone,
+        cont.name as contractor_name, cont.phone as contractor_phone,
+        sub.name as subcontractor_name, sub.phone as subcontractor_phone,
+        eng.name as engineer_name, eng.phone as engineer_phone,
+        att.name as attention_name, att.phone as attention_phone
+      FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
+      LEFT JOIN clients cont ON q.contractor_id = cont.id
+      LEFT JOIN clients sub ON q.subcontractor_id = sub.id
+      LEFT JOIN clients eng ON q.engineer_id = eng.id
+      LEFT JOIN clients att ON q.attention_id = att.id
+      WHERE q.id = ?
+    `, [quotationId]);
+
+    if (quotationRows.length === 0) {
+      return res.status(404).send('Quotation not found');
+    }
+
+    const quotation = quotationRows[0];
+
+    // Get items using YOUR exact table name
+    const [itemRows] = await db.query(
+      'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+
+    // Get scope using YOUR exact table name and column
+    const [scopeRows] = await db.query(
+      'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+
+    // Get materials using YOUR exact table name and column
+    const [materialRows] = await db.query(
+      'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+
+    // Get terms using YOUR exact table name and column
+    const [termRows] = await db.query(
+      'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+
+    const items = itemRows || [];
+    const scope = scopeRows.map(row => row.scope) || [];
+    const materials = materialRows.map(row => row.material) || [];
+    const terms = termRows.map(row => row.term) || [];
+
+    res.render('quotation-freeze-view', { quotation, items, scope, materials, terms });
+
+  } catch (err) {
+    console.error('❌ Get freeze view error:', err);
+    res.status(500).send('Error loading quotation');
+  }
+});
+
+// 🟢 Duplicate quotation
+router.post('/quotations/duplicate/:id', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  try {
+    const sourceId = req.params.id;
+
+    // Get source quotation
+    const [sourceRows] = await db.query(`
+      SELECT 
+        q.*,
+        c.name as client_name, c.phone as client_phone,
+        cont.name as contractor_name, cont.phone as contractor_phone,
+        sub.name as subcontractor_name, sub.phone as subcontractor_phone,
+        eng.name as engineer_name, eng.phone as engineer_phone,
+        att.name as attention_name, att.phone as attention_phone
+      FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
+      LEFT JOIN clients cont ON q.contractor_id = cont.id
+      LEFT JOIN clients sub ON q.subcontractor_id = sub.id
+      LEFT JOIN clients eng ON q.engineer_id = eng.id
+      LEFT JOIN clients att ON q.attention_id = att.id
+      WHERE q.id = ?
+    `, [sourceId]);
+
+    if (sourceRows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Source quotation not found' });
+    }
+
+    const source = sourceRows[0];
+
+    // Generate new quotation number
+    const year = new Date().getFullYear();
+    const [lastRows] = await db.query('SELECT MAX(quotation_no) AS lastNo FROM quotations');
+    const lastRaw = lastRows[0]?.lastNo || '';
+    const match = lastRaw.match(/(\d{9})$/);
+    const lastNum = match ? parseInt(match[1]) : 980000000;
+    const newNum = lastNum + 1;
+    const newQuotationNo = `#WP-${year}S-${newNum}`;
+
+    // Helper function to find or create client
     async function findOrCreateClient(name, phone) {
       if (name && name.trim() && phone && phone.trim()) {
         const trimmedName = name.trim();
@@ -373,45 +631,41 @@ router.post('/quotations/update/:id', async (req, res) => {
     }
 
     // Get or create client IDs
-    const client_id = await findOrCreateClient(client_name, client_phone);
-    const contractor_id = await findOrCreateClient(contractor_name, contractor_phone);
-    const subcontractor_id = await findOrCreateClient(subcontractor_name, subcontractor_phone);
-    const engineer_id = await findOrCreateClient(engineer_name, engineer_phone);
-    const attention_id = await findOrCreateClient(attention_name, attention_phone);
+    const client_id = await findOrCreateClient(source.client_name, source.client_phone);
+    const contractor_id = await findOrCreateClient(source.contractor_name, source.contractor_phone);
+    const subcontractor_id = await findOrCreateClient(source.subcontractor_name, source.subcontractor_phone);
+    const engineer_id = await findOrCreateClient(source.engineer_name, source.engineer_phone);
+    const attention_id = await findOrCreateClient(source.attention_name, source.attention_phone);
 
-    if (!client_id) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Client name and phone are required for the main client.' 
-      });
-    }
-
-    // Update quotation
-    await db.query(`
-      UPDATE quotations SET
-        quotation_no = ?, tdate = ?, client_id = ?, contractor_id = ?, engineer_id = ?, subcontractor_id = ?, attention_id = ?,
-        ref_no = ?, ref_date = ?, description = ?, project_location = ?, warranty = ?, warranty_note = ?,
-        total_amount = ?, discount = ?, vat_rate = ?, vat_amount = ?, round_off = ?, grand_total = ?,
-        show_scope_slno = ?, show_material_slno = ?, show_term_slno = ?
-      WHERE id = ?
+    // Insert new quotation (clear reference fields as planned)
+    const [result] = await db.query(`
+      INSERT INTO quotations (
+        quotation_no, tdate, client_id, contractor_id, engineer_id, subcontractor_id, attention_id,
+        ref_no, ref_date, description, project_location, warranty, warranty_note,
+        total_amount, discount, vat_rate, vat_amount, round_off, grand_total,
+        show_scope_slno, show_material_slno, show_term_slno
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      quotation_no, tdate, client_id, contractor_id, engineer_id, subcontractor_id, attention_id,
-      ref_no || null, ref_date || null, description || null, project_location, warranty, warranty_note || null,
-      total_amount, discount, vat_rate, vat_amount, round_off, grand_total,
-      show_scope_slno ? 1 : 0, show_material_slno ? 1 : 0, show_term_slno ? 1 : 0,
-      quotationId
+      newQuotationNo, new Date().toISOString().split('T')[0], // Today's date
+      client_id, contractor_id, engineer_id, subcontractor_id, attention_id,
+      null, null, null, // Clear reference fields
+      source.project_location, source.warranty, source.warranty_note,
+      source.total_amount, source.discount, source.vat_rate, source.vat_amount, 
+      source.round_off, source.grand_total,
+      source.show_scope_slno, source.show_material_slno, source.show_term_slno
     ]);
 
-    // Delete existing related records
-    await db.query('DELETE FROM quotation_item_lines WHERE quotation_id = ?', [quotationId]);
-    await db.query('DELETE FROM quotation_scope WHERE quotation_id = ?', [quotationId]);
-    await db.query('DELETE FROM quotation_materials WHERE quotation_id = ?', [quotationId]);
-    await db.query('DELETE FROM quotation_terms WHERE quotation_id = ?', [quotationId]);
+    const newQuotationId = result.insertId;
 
-    // Insert updated data
-    if (itemsData.length > 0) {
-      const itemValues = itemsData.map(item => [
-        quotationId, item.description, item.qty, item.unit, item.rate, item.amount
+    // Copy items
+    const [sourceItems] = await db.query(
+      'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
+      [sourceId]
+    );
+
+    if (sourceItems.length > 0) {
+      const itemValues = sourceItems.map(item => [
+        newQuotationId, item.description, item.qty, item.unit, item.rate, item.amount
       ]);
       await db.query(`
         INSERT INTO quotation_item_lines (quotation_id, description, qty, unit, rate, amount)
@@ -419,109 +673,87 @@ router.post('/quotations/update/:id', async (req, res) => {
       `, [itemValues]);
     }
 
-    if (scopeData.length > 0) {
-      const scopeValues = scopeData.map((text) => [quotationId, text]);
+    // Copy scope
+    const [sourceScope] = await db.query(
+      'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
+      [sourceId]
+    );
+
+    if (sourceScope.length > 0) {
+      const scopeValues = sourceScope.map(item => [newQuotationId, item.scope]);
       await db.query(`
-        INSERT INTO quotation_scope (quotation_id, scope)
-        VALUES ?
+        INSERT INTO quotation_scope (quotation_id, scope) VALUES ?
       `, [scopeValues]);
     }
 
-    if (materialsData.length > 0) {
-      const materialValues = materialsData.map((text) => [quotationId, text]);
+    // Copy materials
+    const [sourceMaterials] = await db.query(
+      'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
+      [sourceId]
+    );
+
+    if (sourceMaterials.length > 0) {
+      const materialValues = sourceMaterials.map(item => [newQuotationId, item.material]);
       await db.query(`
-        INSERT INTO quotation_materials (quotation_id, material)
-        VALUES ?
+        INSERT INTO quotation_materials (quotation_id, material) VALUES ?
       `, [materialValues]);
     }
 
-    if (termsData.length > 0) {
-      const termValues = termsData.map((text) => [quotationId, text]);
+    // Copy terms
+    const [sourceTerms] = await db.query(
+      'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
+      [sourceId]
+    );
+
+    if (sourceTerms.length > 0) {
+      const termValues = sourceTerms.map(item => [newQuotationId, item.term]);
       await db.query(`
-        INSERT INTO quotation_terms (quotation_id, term)
-        VALUES ?
+        INSERT INTO quotation_terms (quotation_id, term) VALUES ?
       `, [termValues]);
     }
 
-    res.json({ 
-      success: true, 
-      message: 'Quotation updated successfully!',
-      redirectTo: `/quotations/view/${quotationId}` 
-    });
+    res.json({ success: true, newId: newQuotationId, message: 'Quotation duplicated successfully!' });
 
   } catch (err) {
-    console.error('❌ Update quotation error:', err);
-    res.status(500).json({ success: false, error: 'Failed to update quotation', details: err.message });
+    console.error('❌ Duplicate quotation error:', err);
+    res.status(500).json({ success: false, error: 'Failed to duplicate quotation' });
   }
 });
 
-// 🟢 Show freeze view (read-only quotation display)
-router.get('/quotations/view/:id', async (req, res) => {
+// 🟢 Delete quotation
+router.delete('/quotations/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
     const quotationId = req.params.id;
 
-    const [quotationRows] = await db.query(`
-      SELECT 
-        q.*,
-        c.name as client_name, c.phone as client_phone,
-        cont.name as contractor_name, cont.phone as contractor_phone,
-        sub.name as subcontractor_name, sub.phone as subcontractor_phone,
-        eng.name as engineer_name, eng.phone as engineer_phone,
-        att.name as attention_name, att.phone as attention_phone
-      FROM quotations q
-      LEFT JOIN clients c ON q.client_id = c.id
-      LEFT JOIN clients cont ON q.contractor_id = cont.id
-      LEFT JOIN clients sub ON q.subcontractor_id = sub.id
-      LEFT JOIN clients eng ON q.engineer_id = eng.id
-      LEFT JOIN clients att ON q.attention_id = att.id
-      WHERE q.id = ?
-    `, [quotationId]);
+    // Delete related records first using YOUR exact table names
+    await db.query('DELETE FROM quotation_item_lines WHERE quotation_id = ?', [quotationId]);
+    await db.query('DELETE FROM quotation_scope WHERE quotation_id = ?', [quotationId]);
+    await db.query('DELETE FROM quotation_materials WHERE quotation_id = ?', [quotationId]);
+    await db.query('DELETE FROM quotation_terms WHERE quotation_id = ?', [quotationId]);
 
-    if (quotationRows.length === 0) {
-      return res.status(404).send('Quotation not found');
-    }
+    // Delete quotation
+    await db.query('DELETE FROM quotations WHERE id = ?', [quotationId]);
 
-    const quotation = quotationRows[0];
-
-    const [itemRows] = await db.query(
-      'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
-    const [scopeRows] = await db.query(
-      'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
-    const [materialRows] = await db.query(
-      'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
-    const [termRows] = await db.query(
-      'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
-
-    const items = itemRows || [];
-    const scope = scopeRows.map(row => row.scope) || [];
-    const materials = materialRows.map(row => row.material) || [];
-    const terms = termRows.map(row => row.term) || [];
-
-    res.render('quotation-freeze-view', { quotation, items, scope, materials, terms });
+    res.json({ success: true, message: 'Quotation deleted successfully!' });
 
   } catch (err) {
-    console.error('❌ Get freeze view error:', err);
-    res.status(500).send('Error loading quotation');
+    console.error('❌ Delete quotation error:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete quotation' });
   }
 });
 
-// 🟢 Duplicate quotation
+// ✅ ADD THIS TO YOUR routes/quotation.js - AFTER THE VIEW ROUTE
+
+// 🟢 Duplicate quotation - REDIRECT TO CREATE MODE
 router.post('/quotations/duplicate/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
     const sourceId = req.params.id;
 
+    // Get source quotation with all related data
     const [sourceRows] = await db.query(`
       SELECT 
         q.*,
@@ -606,7 +838,7 @@ router.post('/quotations/duplicate/:id', async (req, res) => {
     const materials = sourceMaterials.map(row => row.material) || [];
     const terms = sourceTerms.map(row => row.term) || [];
 
-    // Render CREATE form with duplicated data
+    // ✅ RENDER CREATE FORM WITH DUPLICATED DATA
     res.render('quotation-form', { mode, quotation, items, scope, materials, terms });
 
   } catch (err) {
@@ -615,39 +847,16 @@ router.post('/quotations/duplicate/:id', async (req, res) => {
   }
 });
 
-// 🟢 Delete quotation
-router.delete('/quotations/:id', async (req, res) => {
-  if (!req.session.user) return res.redirect('/');
+// Add these routes to routes/quotation.js - INSERT AFTER THE VIEW ROUTE
 
-  try {
-    const quotationId = req.params.id;
-
-    // Delete related records first
-    await db.query('DELETE FROM quotation_item_lines WHERE quotation_id = ?', [quotationId]);
-    await db.query('DELETE FROM quotation_scope WHERE quotation_id = ?', [quotationId]);
-    await db.query('DELETE FROM quotation_materials WHERE quotation_id = ?', [quotationId]);
-    await db.query('DELETE FROM quotation_terms WHERE quotation_id = ?', [quotationId]);
-
-    // Delete quotation
-    await db.query('DELETE FROM quotations WHERE id = ?', [quotationId]);
-
-    res.json({ success: true, message: 'Quotation deleted successfully!' });
-
-  } catch (err) {
-    console.error('❌ Delete quotation error:', err);
-    res.status(500).json({ success: false, error: 'Failed to delete quotation' });
-  }
-});
-
-// 🔥 ENHANCED EXPORT ROUTES
-
-// Show Export Interface
+// 🔥 NEW: Show Export Interface
 router.get('/quotations/export/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
     const quotationId = req.params.id;
 
+    // Get quotation with client details
     const [quotationRows] = await db.query(`
       SELECT 
         q.*,
@@ -671,6 +880,7 @@ router.get('/quotations/export/:id', async (req, res) => {
 
     const quotation = quotationRows[0];
 
+    // Get all related data
     const [itemRows] = await db.query(
       'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
       [quotationId]
@@ -693,6 +903,7 @@ router.get('/quotations/export/:id', async (req, res) => {
     const materials = materialRows.map(row => row.material) || [];
     const terms = termRows.map(row => row.term) || [];
 
+    // Render export interface
     res.render('quotation-export-interface', { 
       quotation, 
       items, 
@@ -707,45 +918,17 @@ router.get('/quotations/export/:id', async (req, res) => {
   }
 });
 
-// Handle Export Generation
-// 🔧 FIXED: Handle Export Generation - Replace your existing route
+// 🔥 NEW: Handle Export Generation
 router.post('/quotations/export/:id/generate', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
     const quotationId = req.params.id;
+    const exportSettings = req.body;
     
-    // 🔥 FIX: Handle both FormData and JSON
-    let exportSettings;
-    
-    if (req.is('multipart/form-data') || req.is('application/x-www-form-urlencoded')) {
-      // FormData from the interface
-      exportSettings = req.body;
-    } else if (req.is('application/json')) {
-      // JSON data
-      exportSettings = req.body;
-    } else {
-      // Fallback - try to use body directly
-      exportSettings = req.body || {};
-    }
-    
-    console.log('🚀 Export request received');
-    console.log('📦 Content-Type:', req.get('Content-Type'));
-    console.log('📦 Raw body keys:', Object.keys(req.body || {}));
-    console.log('📦 Export settings:', exportSettings);
-    
-    // 🔥 VALIDATION: Ensure we have the required fields
-    if (!exportSettings.fileType) {
-      console.log('❌ Missing fileType, setting default to PDF');
-      exportSettings.fileType = 'pdf';
-    }
-    
-    if (!exportSettings.exportMethod) {
-      console.log('❌ Missing exportMethod, setting default to download');
-      exportSettings.exportMethod = 'download';
-    }
+    console.log('🚀 Export request:', exportSettings);
 
-    // Get quotation data
+    // Get quotation data (same query as above)
     const [quotationRows] = await db.query(`
       SELECT 
         q.*,
@@ -792,40 +975,26 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
     const materials = materialRows.map(row => row.material) || [];
     const terms = termRows.map(row => row.term) || [];
 
-    // Use enhanced export utils
+    // Import ExportUtils
+    // Use the enhanced version instead:
     const ExportUtils = require('../utils/exportUtilsEnhanced');
 
-    // 🔥 FIXED: Validate export settings with fallbacks
-    const validationResult = ExportUtils.validateExportSettings(exportSettings);
-    
-    if (!validationResult.isValid) {
-      console.log('⚠️ Validation warnings:', validationResult.errors);
-      // Don't fail, just use validated settings with defaults
-    }
-    
-    const validatedSettings = validationResult.settings;
-    console.log('✅ Using validated settings:', validatedSettings);
+    // Validate and process export settings
+    const validatedSettings = ExportUtils.validateExportSettings(exportSettings);
 
-    // Generate QR Code with error handling
-    let qrCodeDataURL;
-    try {
-      qrCodeDataURL = await ExportUtils.generateQRCode(
-        quotationId, 
-        req.protocol + '://' + req.get('host')
-      );
-    } catch (qrError) {
-      console.warn('⚠️ QR Code generation failed, using fallback:', qrError.message);
-      qrCodeDataURL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-    }
+    // Generate QR Code
+    const qrCodeDataURL = await ExportUtils.generateQRCode(
+      quotationId, 
+      req.protocol + '://' + req.get('host')
+    );
 
     let fileBuffer;
     let mimeType;
     let fileName;
 
     // Handle different export types
-    switch (validatedSettings.fileType || 'pdf') {
+    switch (exportSettings.fileType) {
       case 'pdf':
-        console.log('📄 Generating PDF...');
         // Generate HTML first, then PDF
         const htmlContent = await new Promise((resolve, reject) => {
           res.app.render('quotation-export-view', {
@@ -849,7 +1018,6 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
 
       case 'excel':
       case 'xlsx':
-        console.log('📊 Generating Excel...');
         fileBuffer = await ExportUtils.generateExcel(
           quotation, 
           items, 
@@ -865,7 +1033,6 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
       case 'png':
       case 'jpg':
       case 'jpeg':
-        console.log('🖼️ Generating Image...');
         // Generate HTML first, then Image
         const imageHtmlContent = await new Promise((resolve, reject) => {
           res.app.render('quotation-export-view', {
@@ -882,23 +1049,19 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
           });
         });
 
-        validatedSettings.imageFormat = validatedSettings.fileType === 'jpg' ? 'jpeg' : validatedSettings.fileType;
+        validatedSettings.imageFormat = exportSettings.fileType === 'jpg' ? 'jpeg' : exportSettings.fileType;
         fileBuffer = await ExportUtils.generateImage(imageHtmlContent, validatedSettings);
-        mimeType = ExportUtils.getMimeType(validatedSettings.fileType);
-        fileName = ExportUtils.generateFileName(quotation, validatedSettings.fileType);
+        mimeType = ExportUtils.getMimeType(exportSettings.fileType);
+        fileName = ExportUtils.generateFileName(quotation, exportSettings.fileType);
         break;
 
       default:
-        console.log('❌ Unsupported file type:', validatedSettings.fileType);
-        return res.status(400).json({ success: false, error: 'Unsupported file type: ' + validatedSettings.fileType });
+        return res.status(400).json({ success: false, error: 'Unsupported file type' });
     }
 
-    console.log('✅ File generated:', fileName, 'Size:', fileBuffer.length, 'bytes');
-
     // Handle export method
-    switch (validatedSettings.exportMethod || 'download') {
+    switch (exportSettings.exportMethod) {
       case 'download':
-        console.log('⬇️ Sending download...');
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.setHeader('Content-Length', fileBuffer.length);
@@ -906,12 +1069,11 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
         break;
 
       case 'email':
-        console.log('📧 Preparing email...');
-        const emailTemplate = ExportUtils.generateEmailTemplate(quotation, validatedSettings);
+        // Generate email data for client-side handling
         const emailData = {
           to: quotation.client_email || '',
-          subject: emailTemplate.subject,
-          body: emailTemplate.body,
+          subject: `Quotation ${quotation.quotation_no} - ${quotation.client_name}`,
+          body: `Dear ${quotation.client_name},\n\nPlease find attached your quotation.\n\nBest regards,\nInternational Pipes Technology Co LLC`,
           attachment: {
             filename: fileName,
             content: fileBuffer.toString('base64'),
@@ -927,7 +1089,7 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
         break;
 
       case 'whatsapp':
-        console.log('💬 Preparing WhatsApp...');
+        // Generate WhatsApp data
         const whatsappCaption = ExportUtils.generateWhatsAppCaption(quotation, validatedSettings);
         
         res.json({ 
@@ -946,28 +1108,27 @@ router.post('/quotations/export/:id/generate', async (req, res) => {
         break;
 
       default:
-        return res.status(400).json({ success: false, error: 'Unsupported export method: ' + validatedSettings.exportMethod });
+        return res.status(400).json({ success: false, error: 'Unsupported export method' });
     }
 
   } catch (err) {
     console.error('❌ Export generation error:', err);
-    console.error('❌ Stack trace:', err.stack);
     res.status(500).json({ 
       success: false, 
       error: 'Export generation failed', 
-      details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      details: err.message 
     });
   }
 });
 
-// Preview Export
+// 🔥 NEW: Preview Export
+// 🔥 REPLACE your preview route with this fixed version:
 router.post('/quotations/export/:id/preview', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
     const quotationId = req.params.id;
-    const exportSettings = req.body || {}; // Add fallback for empty body
+    const exportSettings = req.body || {}; // Add fallback
 
     // Get quotation data
     const [quotationRows] = await db.query(`
@@ -1016,7 +1177,7 @@ router.post('/quotations/export/:id/preview', async (req, res) => {
     const materials = materialRows.map(row => row.material) || [];
     const terms = termRows.map(row => row.term) || [];
 
-    // Provide default settings for preview
+    // 🔥 FIXED: Provide default settings
     const validatedSettings = {
       customHeader: exportSettings.customHeader || 'QUOTATION FOR WATERPROOFING',
       headerFontSize: exportSettings.headerFontSize || '28px',
@@ -1028,11 +1189,10 @@ router.post('/quotations/export/:id/preview', async (req, res) => {
       paperSize: exportSettings.paperSize || 'A4',
       letterhead: exportSettings.letterhead || 'plain',
       includeSignature: exportSettings.includeSignature || false,
-      includeStamp: exportSettings.includeStamp || false,
-      stampPosition: exportSettings.stampPosition || 'auto'
+      includeStamp: exportSettings.includeStamp || false
     };
     
-    // Generate QR code with error handling
+    // 🔥 FIXED: Generate QR code with error handling
     let qrCodeDataURL;
     try {
       const ExportUtils = require('../utils/exportUtilsEnhanced');
@@ -1042,6 +1202,7 @@ router.post('/quotations/export/:id/preview', async (req, res) => {
       );
     } catch (qrError) {
       console.warn('QR Code generation failed, using fallback:', qrError.message);
+      // Fallback: create a simple placeholder
       qrCodeDataURL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
     }
 
@@ -1062,7 +1223,7 @@ router.post('/quotations/export/:id/preview', async (req, res) => {
   }
 });
 
-// Save Export Template
+// 🔥 NEW: Save Export Template
 router.post('/quotations/export/templates/save', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
@@ -1070,7 +1231,7 @@ router.post('/quotations/export/templates/save', async (req, res) => {
     const { templateName, settings } = req.body;
     const userId = req.session.user.id;
 
-    const ExportUtils = require('../utils/exportUtilsEnhanced');
+    const ExportUtils = require('../utils/exportUtils');
     const template = await ExportUtils.saveExportTemplate(templateName, settings, userId);
 
     res.json({ 
@@ -1089,138 +1250,17 @@ router.post('/quotations/export/templates/save', async (req, res) => {
   }
 });
 
-// Add this test route to your routes/quotation.js (temporary for debugging)
+// 🔥 ADD THESE NEW EXPORT ROUTES TO YOUR routes/quotation.js FILE
+// Add before the "module.exports = router;" line
 
-// 🔧 DEBUG: Simple PDF test route
-router.get('/test-pdf', async (req, res) => {
-  try {
-    console.log('🧪 Starting PDF test...');
-    
-    const puppeteer = require('puppeteer');
-    
-    let browser = null;
-    
-    try {
-      console.log('🚀 Launching Puppeteer...');
-      
-      browser = await puppeteer.launch({
-        headless: 'new',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--disable-gpu'
-        ]
-      });
-      
-      console.log('✅ Puppeteer launched successfully');
-      
-      const page = await browser.newPage();
-      
-      // Simple HTML content for testing
-      const simpleHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>PDF Test</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              padding: 20px;
-              color: #333;
-            }
-            h1 { color: #c91f1f; }
-            .test-content {
-              border: 2px solid #ccc;
-              padding: 20px;
-              margin: 20px 0;
-              border-radius: 8px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>🧪 PDF Generation Test</h1>
-          <div class="test-content">
-            <h2>Test Successful!</h2>
-            <p>If you can see this content in a PDF, then Puppeteer is working correctly.</p>
-            <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-            <p><strong>Server:</strong> Node.js with Puppeteer</p>
-          </div>
-          
-          <div class="test-content">
-            <h3>Quotation Test Data</h3>
-            <table border="1" style="width: 100%; border-collapse: collapse;">
-              <tr style="background: #f0f0f0;">
-                <th style="padding: 8px;">Item</th>
-                <th style="padding: 8px;">Quantity</th>
-                <th style="padding: 8px;">Rate</th>
-                <th style="padding: 8px;">Amount</th>
-              </tr>
-              <tr>
-                <td style="padding: 8px;">Waterproofing Service</td>
-                <td style="padding: 8px;">1</td>
-                <td style="padding: 8px;">100.000</td>
-                <td style="padding: 8px;">100.000</td>
-              </tr>
-            </table>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      console.log('📄 Setting HTML content...');
-      await page.setContent(simpleHtml, { 
-        waitUntil: 'networkidle0',
-        timeout: 10000 
-      });
-      
-      console.log('🔨 Generating PDF...');
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '20mm',
-          right: '15mm',
-          bottom: '20mm',
-          left: '15mm'
-        }
-      });
-      
-      console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
-      
-      // Send the PDF
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="test-pdf.pdf"');
-      res.setHeader('Content-Length', pdfBuffer.length);
-      res.send(pdfBuffer);
-      
-    } catch (pdfError) {
-      console.error('❌ PDF generation error:', pdfError);
-      res.status(500).send(`PDF Error: ${pdfError.message}`);
-    } finally {
-      if (browser) {
-        await browser.close();
-        console.log('🔒 Browser closed');
-      }
-    }
-    
-  } catch (err) {
-    console.error('❌ Test route error:', err);
-    res.status(500).send(`Test Error: ${err.message}`);
-  }
-});
+// 🔥 NEW: Show Export Interface
+router.get('/quotations/export/:id', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
 
-// 🔧 DEBUG: Test your export view HTML
-// 🔧 UPDATE: Test your export view HTML with complete data
-router.get('/test-html/:id', async (req, res) => {
   try {
     const quotationId = req.params.id;
-    
-    // Get COMPLETE quotation data
+
+    // Get quotation with client details
     const [quotationRows] = await db.query(`
       SELECT 
         q.*,
@@ -1244,7 +1284,7 @@ router.get('/test-html/:id', async (req, res) => {
 
     const quotation = quotationRows[0];
 
-    // Get ALL related data
+    // Get all related data
     const [itemRows] = await db.query(
       'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
       [quotationId]
@@ -1267,44 +1307,323 @@ router.get('/test-html/:id', async (req, res) => {
     const materials = materialRows.map(row => row.material) || [];
     const terms = termRows.map(row => row.term) || [];
 
-    // Complete test settings
-    const exportSettings = {
-      customHeader: 'TEST QUOTATION',
-      headerFontSize: '28px',
-      subheaderFontSize: '18px',
-      bodyFontSize: '14px',
-      tableFontSize: '12px',
-      smallFontSize: '11px',
-      qrSize: '100',
-      paperSize: 'A4'
-    };
+    // Render export interface
+    res.render('quotation-export-interface', { 
+      quotation, 
+      items, 
+      scope, 
+      materials, 
+      terms 
+    });
 
-    // Generate QR code for testing
-    let qrCodeDataURL;
-    try {
-      const ExportUtils = require('../utils/exportUtilsEnhanced');
-      qrCodeDataURL = await ExportUtils.generateQRCode(
-        quotationId, 
-        req.protocol + '://' + req.get('host')
-      );
-    } catch (err) {
-      qrCodeDataURL = null; // Will show placeholder
+  } catch (err) {
+    console.error('❌ Export interface error:', err);
+    res.status(500).send('Error loading export interface');
+  }
+});
+
+// 🔥 NEW: Handle Export Generation
+router.post('/quotations/export/:id/generate', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  try {
+    const quotationId = req.params.id;
+    const exportSettings = req.body;
+    
+    console.log('🚀 Export request:', exportSettings);
+
+    // Get quotation data (same query as above)
+    const [quotationRows] = await db.query(`
+      SELECT 
+        q.*,
+        c.name as client_name, c.phone as client_phone,
+        cont.name as contractor_name, cont.phone as contractor_phone,
+        sub.name as subcontractor_name, sub.phone as subcontractor_phone,
+        eng.name as engineer_name, eng.phone as engineer_phone,
+        att.name as attention_name, att.phone as attention_phone
+      FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
+      LEFT JOIN clients cont ON q.contractor_id = cont.id
+      LEFT JOIN clients sub ON q.subcontractor_id = sub.id
+      LEFT JOIN clients eng ON q.engineer_id = eng.id
+      LEFT JOIN clients att ON q.attention_id = att.id
+      WHERE q.id = ?
+    `, [quotationId]);
+
+    if (quotationRows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Quotation not found' });
     }
 
-    // Render with complete data
+    const quotation = quotationRows[0];
+
+    // Get related data
+    const [itemRows] = await db.query(
+      'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+    const [scopeRows] = await db.query(
+      'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+    const [materialRows] = await db.query(
+      'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+    const [termRows] = await db.query(
+      'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+
+    const items = itemRows || [];
+    const scope = scopeRows.map(row => row.scope) || [];
+    const materials = materialRows.map(row => row.material) || [];
+    const terms = termRows.map(row => row.term) || [];
+
+    // Validate and process export settings
+    const validatedSettings = ExportUtils.validateExportSettings(exportSettings);
+
+    // Generate QR Code
+    const qrCodeDataURL = await ExportUtils.generateQRCode(
+      quotationId, 
+      req.protocol + '://' + req.get('host')
+    );
+
+    let fileBuffer;
+    let mimeType;
+    let fileName;
+
+    // Handle different export types
+    switch (exportSettings.fileType) {
+      case 'pdf':
+        // Generate HTML first, then PDF
+        const htmlContent = await new Promise((resolve, reject) => {
+          res.app.render('quotation-export-view', {
+            quotation,
+            items,
+            scope,
+            materials,
+            terms,
+            exportSettings: validatedSettings,
+            qrCodeDataURL
+          }, (err, html) => {
+            if (err) reject(err);
+            else resolve(html);
+          });
+        });
+
+        fileBuffer = await ExportUtils.generatePDF(htmlContent, validatedSettings);
+        mimeType = 'application/pdf';
+        fileName = ExportUtils.generateFileName(quotation, 'pdf');
+        break;
+
+      case 'excel':
+      case 'xlsx':
+        fileBuffer = await ExportUtils.generateExcel(
+          quotation, 
+          items, 
+          scope, 
+          materials, 
+          terms, 
+          validatedSettings
+        );
+        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        fileName = ExportUtils.generateFileName(quotation, 'xlsx');
+        break;
+
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+        // Generate HTML first, then Image
+        const imageHtmlContent = await new Promise((resolve, reject) => {
+          res.app.render('quotation-export-view', {
+            quotation,
+            items,
+            scope,
+            materials,
+            terms,
+            exportSettings: validatedSettings,
+            qrCodeDataURL
+          }, (err, html) => {
+            if (err) reject(err);
+            else resolve(html);
+          });
+        });
+
+        validatedSettings.imageFormat = exportSettings.fileType === 'jpg' ? 'jpeg' : exportSettings.fileType;
+        fileBuffer = await ExportUtils.generateImage(imageHtmlContent, validatedSettings);
+        mimeType = ExportUtils.getMimeType(exportSettings.fileType);
+        fileName = ExportUtils.generateFileName(quotation, exportSettings.fileType);
+        break;
+
+      default:
+        return res.status(400).json({ success: false, error: 'Unsupported file type' });
+    }
+
+    // Handle export method
+    switch (exportSettings.exportMethod) {
+      case 'download':
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Length', fileBuffer.length);
+        res.send(fileBuffer);
+        break;
+
+      case 'email':
+        // Generate email data for client-side handling
+        const emailData = {
+          to: quotation.client_email || '',
+          subject: `Quotation ${quotation.quotation_no} - ${quotation.client_name}`,
+          body: `Dear ${quotation.client_name},\n\nPlease find attached your quotation.\n\nBest regards,\nInternational Pipes Technology Co LLC`,
+          attachment: {
+            filename: fileName,
+            content: fileBuffer.toString('base64'),
+            contentType: mimeType
+          }
+        };
+        
+        res.json({ 
+          success: true, 
+          action: 'email',
+          emailData: emailData
+        });
+        break;
+
+      case 'whatsapp':
+        // Generate WhatsApp data
+        const whatsappCaption = ExportUtils.generateWhatsAppCaption(quotation, validatedSettings);
+        
+        res.json({ 
+          success: true, 
+          action: 'whatsapp',
+          whatsappData: {
+            phone: quotation.client_phone || '',
+            caption: whatsappCaption,
+            document: {
+              filename: fileName,
+              content: fileBuffer.toString('base64'),
+              contentType: mimeType
+            }
+          }
+        });
+        break;
+
+      default:
+        return res.status(400).json({ success: false, error: 'Unsupported export method' });
+    }
+
+  } catch (err) {
+    console.error('❌ Export generation error:', err);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Export generation failed', 
+      details: err.message 
+    });
+  }
+});
+
+// 🔥 NEW: Preview Export
+router.post('/quotations/export/:id/preview', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  try {
+    const quotationId = req.params.id;
+    const exportSettings = req.body;
+
+    // Get quotation data (same as above)
+    const [quotationRows] = await db.query(`
+      SELECT 
+        q.*,
+        c.name as client_name, c.phone as client_phone,
+        cont.name as contractor_name, cont.phone as contractor_phone,
+        sub.name as subcontractor_name, sub.phone as subcontractor_phone,
+        eng.name as engineer_name, eng.phone as engineer_phone,
+        att.name as attention_name, att.phone as attention_phone
+      FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
+      LEFT JOIN clients cont ON q.contractor_id = cont.id
+      LEFT JOIN clients sub ON q.subcontractor_id = sub.id
+      LEFT JOIN clients eng ON q.engineer_id = eng.id
+      LEFT JOIN clients att ON q.attention_id = att.id
+      WHERE q.id = ?
+    `, [quotationId]);
+
+    if (quotationRows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Quotation not found' });
+    }
+
+    const quotation = quotationRows[0];
+
+    // Get related data
+    const [itemRows] = await db.query(
+      'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+    const [scopeRows] = await db.query(
+      'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+    const [materialRows] = await db.query(
+      'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+    const [termRows] = await db.query(
+      'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
+      [quotationId]
+    );
+
+    const items = itemRows || [];
+    const scope = scopeRows.map(row => row.scope) || [];
+    const materials = materialRows.map(row => row.material) || [];
+    const terms = termRows.map(row => row.term) || [];
+
+    // Validate settings and generate QR code
+    const validatedSettings = ExportUtils.validateExportSettings(exportSettings);
+    
+    const qrCodeDataURL = await ExportUtils.generateQRCode(
+      quotationId, 
+      req.protocol + '://' + req.get('host')
+    );
+
+    // Render the export view directly for preview
     res.render('quotation-export-view', {
       quotation,
       items,
       scope,
       materials,
       terms,
-      exportSettings,
+      exportSettings: validatedSettings,
       qrCodeDataURL
     });
 
   } catch (err) {
-    console.error('❌ HTML test error:', err);
-    res.status(500).send(`HTML Test Error: ${err.message}`);
+    console.error('❌ Export preview error:', err);
+    res.status(500).send('Error generating preview');
+  }
+});
+
+// 🔥 NEW: Save Export Template
+router.post('/quotations/export/templates/save', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  try {
+    const { templateName, settings } = req.body;
+    const userId = req.session.user.id;
+
+    const template = await ExportUtils.saveExportTemplate(templateName, settings, userId);
+
+    res.json({ 
+      success: true, 
+      message: 'Export template saved successfully!',
+      template: template
+    });
+
+  } catch (err) {
+    console.error('❌ Save template error:', err);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to save template',
+      details: err.message 
+    });
   }
 });
 

@@ -49,6 +49,12 @@ app.use('/', quotationItemsRoutes);
 app.use('/', quotationRoutes);
 app.use('/', searchRoutes);
 
+// In your app.js, make sure you have these middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// If you're using multer for file uploads, make sure it's configured properly
+
 // Page routes
 app.get('/', (req, res) => res.render('login'));
 

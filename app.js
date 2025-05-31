@@ -12,7 +12,7 @@ const unitsRoutes = require('./routes/units');
 const quotationItemsRoutes = require('./routes/quotation_items');
 const quotationRoutes = require('./routes/quotation');
 const searchRoutes = require('./routes/search');
-// 🔥 ADD THIS LINE - Import export routes
+// 🔥 ONLY ADD THIS LINE
 const exportRoutes = require('./routes/export');
 
 const app = express();
@@ -39,6 +39,7 @@ app.use('/js', (req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 // Route mounting
 app.use('/', loginRoute);
 app.use('/', clientRoutes);
@@ -49,7 +50,7 @@ app.use('/', unitsRoutes);
 app.use('/', quotationItemsRoutes);
 app.use('/', quotationRoutes);
 app.use('/', searchRoutes);
-// 🔥 ADD THIS LINE - Mount export routes
+// 🔥 ONLY ADD THIS LINE
 app.use('/', exportRoutes);
 
 // Page routes

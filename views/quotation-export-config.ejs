@@ -3,42 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Export Quotation #<%= quotation.quotation_no %></title>
+  <title>Export Quotation #<%= quotation.quotation_no %> - QuotePro Enhanced</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="icon" type="image/png" href="/images/quotepro-logo.png">
   
   <style>
-    body { font-family: 'Outfit', sans-serif; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
     
     .export-section {
-      background: white;
-      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 16px;
       padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
       border-left: 4px solid #c91f1f;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .export-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     }
     
     .export-section h3 {
       color: #c91f1f;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 18px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+    }
+    
+    .export-section h3 i {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
     }
     
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
     
     .form-group label {
       display: block;
-      font-weight: 500;
+      font-weight: 600;
       color: #374151;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       font-size: 14px;
     }
     
@@ -46,43 +69,61 @@
     .form-group select,
     .form-group textarea {
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
       font-size: 14px;
-      transition: border-color 0.2s;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.9);
     }
     
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: #c91f1f;
+      box-shadow: 0 0 0 4px rgba(201, 31, 31, 0.1);
+      background: white;
     }
     
     .checkbox-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: rgba(249, 250, 251, 0.5);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .checkbox-group:hover {
+      background: rgba(249, 250, 251, 0.8);
     }
     
     .checkbox-group input[type="checkbox"] {
-      width: auto;
+      width: 20px;
+      height: 20px;
       margin: 0;
+      accent-color: #c91f1f;
+    }
+    
+    .checkbox-group label {
+      margin: 0;
+      cursor: pointer;
+      user-select: none;
     }
     
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 20px;
     }
     
     .grid-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
+      gap: 20px;
     }
     
     .grid-4 {
@@ -92,142 +133,287 @@
     }
     
     .export-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
     }
     
     .export-btn {
-      padding: 12px 24px;
+      padding: 16px 24px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 14px;
       cursor: pointer;
       transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 12px;
       text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .export-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .export-btn:hover::before {
+      left: 100%;
     }
     
     .export-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none !important;
     }
     
     .export-btn.pdf {
-      background: #dc2626;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
       color: white;
+      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
     }
     
     .export-btn.pdf:hover:not(:disabled) {
-      background: #b91c1c;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #b91c1c, #991b1b);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
     }
     
     .export-btn.excel {
-      background: #059669;
+      background: linear-gradient(135deg, #059669, #047857);
       color: white;
+      box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
     }
     
     .export-btn.excel:hover:not(:disabled) {
-      background: #047857;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #047857, #065f46);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
     }
     
     .export-btn.image {
-      background: #7c3aed;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       color: white;
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
     }
     
     .export-btn.image:hover:not(:disabled) {
-      background: #6d28d9;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #6d28d9, #5b21b6);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
     }
     
     .export-btn.preview {
-      background: #0ea5e9;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
       color: white;
+      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
     }
     
     .export-btn.preview:hover:not(:disabled) {
-      background: #0284c7;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
     }
     
     .export-btn.whatsapp {
-      background: #25d366;
+      background: linear-gradient(135deg, #25d366, #128c7e);
       color: white;
+      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
     }
     
     .export-btn.whatsapp:hover:not(:disabled) {
-      background: #128c7e;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #128c7e, #075e54);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
     }
     
     .export-btn.email {
-      background: #f59e0b;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
       color: white;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
     }
     
     .export-btn.email:hover:not(:disabled) {
-      background: #d97706;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #d97706, #b45309);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
+    }
+    
+    .export-btn.secondary {
+      background: linear-gradient(135deg, #6b7280, #4b5563);
+      color: white;
+      box-shadow: 0 4px 16px rgba(107, 114, 128, 0.3);
+    }
+    
+    .export-btn.secondary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4b5563, #374151);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(107, 114, 128, 0.4);
     }
     
     .loading {
-      opacity: 0.7;
+      opacity: 0.8;
       pointer-events: none;
+      position: relative;
     }
     
     .loading::after {
-      content: " ⏳";
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: translateY(-50%) rotate(0deg); }
+      100% { transform: translateY(-50%) rotate(360deg); }
     }
     
     .preview-container {
-      background: #f9fafb;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
       border: 2px dashed #d1d5db;
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 24px;
       text-align: center;
-      margin-top: 20px;
-      min-height: 200px;
+      margin-top: 24px;
+      min-height: 300px;
       display: none;
+      transition: all 0.3s ease;
     }
     
     .preview-container.show {
       display: block;
+      animation: fadeInUp 0.5s ease;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     .preview-iframe {
       width: 100%;
-      height: 600px;
+      height: 700px;
       border: none;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
     
-    .font-size-slider {
-      width: 100%;
-      margin: 8px 0;
-    }
-    
-    .letterhead-preview {
-      width: 100px;
-      height: 60px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      background-size: cover;
-      background-position: center;
+    .template-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
       cursor: pointer;
-      margin: 4px;
+      transition: all 0.3s ease;
+      text-align: center;
     }
     
-    .letterhead-preview.selected {
-      border-color: #3b82f6;
-      border-width: 2px;
+    .template-card:hover {
+      border-color: #c91f1f;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201, 31, 31, 0.15);
+    }
+    
+    .template-card.selected {
+      border-color: #c91f1f;
+      background: rgba(201, 31, 31, 0.05);
+      box-shadow: 0 4px 16px rgba(201, 31, 31, 0.2);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #c91f1f, #dc2626);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    
+    .message {
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin: 16px 0;
+      font-weight: 500;
+      display: none;
+    }
+    
+    .message.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #047857;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .message.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .message.info {
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #374151;
+      color: white;
+      text-align: center;
+      border-radius: 8px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
     }
     
     @media (max-width: 768px) {
@@ -236,68 +422,165 @@
       }
       
       .export-buttons {
-        flex-direction: column;
+        grid-template-columns: 1fr;
       }
       
-      .export-btn {
-        justify-content: center;
+      .export-section {
+        padding: 16px;
+        margin-bottom: 16px;
       }
     }
   </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-<!-- Header -->
-<div class="bg-red-700 text-white px-6 py-4 flex justify-between items-center">
-  <div class="flex items-center gap-4">
-    <img src="/images/quotepro-logo-white.png" class="h-10" />
-    <div>
-      <h1 class="text-xl font-bold">QuotePro – Export Quotation</h1>
-      <p class="text-sm">by Muhammed Boss</p>
+<!-- Enhanced Header -->
+<div class="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white px-6 py-6 shadow-2xl">
+  <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+        <i class="fas fa-file-export text-red-600 text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold">QuotePro Enhanced – Export Center</h1>
+        <p class="text-red-100 text-sm">Advanced Export Configuration & Management</p>
+      </div>
     </div>
-  </div>
-  <div class="flex gap-3">
-    <a href="/quotations/view/<%= quotation.id %>" class="bg-white text-red-700 px-3 py-2 rounded hover:bg-gray-200 text-sm font-medium">
-      👁️ View
-    </a>
-    <a href="/dashboard" class="bg-white text-red-700 px-3 py-2 rounded hover:bg-gray-200 text-sm font-medium">
-      🏠 Dashboard
-    </a>
+    <div class="flex gap-3">
+      <a href="/quotations/view/<%= quotation.id %>" class="glass-effect text-red-700 px-4 py-2 rounded-lg hover:bg-white transition-all text-sm font-medium flex items-center gap-2">
+        <i class="fas fa-eye"></i> View Quotation
+      </a>
+      <a href="/dashboard" class="glass-effect text-red-700 px-4 py-2 rounded-lg hover:bg-white transition-all text-sm font-medium flex items-center gap-2">
+        <i class="fas fa-home"></i> Dashboard
+      </a>
+    </div>
   </div>
 </div>
 
 <!-- Main Content -->
-<div class="max-w-6xl mx-auto p-6">
+<div class="max-w-7xl mx-auto p-6">
   
-  <!-- Quotation Info -->
-  <div class="bg-white rounded-lg p-6 mb-6 shadow-sm border-l-4 border-blue-500">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">📤 Export Configuration</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-      <div>
-        <span class="font-semibold text-gray-600">Quotation:</span>
-        <p class="text-blue-600 font-bold"><%= quotation.quotation_no %></p>
+  <!-- Enhanced Quotation Info Card -->
+  <div class="glass-effect rounded-2xl p-8 mb-8 shadow-xl border border-white/20">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+        <i class="fas fa-rocket text-red-600"></i>
+        Export Configuration Center
+      </h2>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <div class="text-sm text-gray-500">Last Updated</div>
+          <div class="font-semibold text-gray-700" id="lastUpdated">Just now</div>
+        </div>
       </div>
-      <div>
-        <span class="font-semibold text-gray-600">Client:</span>
-        <p class="text-gray-900"><%= quotation.client_name %></p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+          <span class="font-semibold text-blue-800">Quotation</span>
+        </div>
+        <p class="text-blue-900 font-bold text-lg"><%= quotation.quotation_no %></p>
       </div>
-      <div>
-        <span class="font-semibold text-gray-600">Amount:</span>
-        <p class="text-green-600 font-bold">OMR <%= parseFloat(quotation.grand_total).toFixed(3) %></p>
+      
+      <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="fas fa-user text-green-600 text-xl"></i>
+          <span class="font-semibold text-green-800">Client</span>
+        </div>
+        <p class="text-green-900 font-bold text-lg"><%= quotation.client_name %></p>
+      </div>
+      
+      <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="fas fa-dollar-sign text-purple-600 text-xl"></i>
+          <span class="font-semibold text-purple-800">Amount</span>
+        </div>
+        <p class="text-purple-900 font-bold text-lg">OMR <%= parseFloat(quotation.grand_total).toFixed(3) %></p>
+      </div>
+      
+      <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="fas fa-calendar text-orange-600 text-xl"></i>
+          <span class="font-semibold text-orange-800">Date</span>
+        </div>
+        <p class="text-orange-900 font-bold text-lg"><%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></p>
       </div>
     </div>
   </div>
 
+  <!-- Progress Bar -->
+  <div id="progressSection" class="hidden mb-6">
+    <div class="glass-effect rounded-xl p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="font-medium text-gray-700">Export Progress</span>
+        <span id="progressPercent" class="text-sm text-gray-500">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div id="progressStatus" class="text-sm text-gray-600 mt-2">Initializing export...</div>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
+  <div id="messagesContainer"></div>
+
   <form id="export-form">
     
-    <!-- Header Customization -->
+    <!-- Template Selection -->
     <div class="export-section">
-      <h3>🎨 Header & Styling</h3>
+      <h3><i class="fas fa-palette"></i> Quick Templates</h3>
+      
+      <div class="grid-3 mb-4">
+        <div class="template-card" data-template="professional">
+          <i class="fas fa-briefcase text-3xl text-blue-600 mb-3"></i>
+          <h4 class="font-semibold mb-2">Professional</h4>
+          <p class="text-sm text-gray-600">Standard business format</p>
+        </div>
+        
+        <div class="template-card" data-template="modern">
+          <i class="fas fa-rocket text-3xl text-purple-600 mb-3"></i>
+          <h4 class="font-semibold mb-2">Modern</h4>
+          <p class="text-sm text-gray-600">Clean, minimal design</p>
+        </div>
+        
+        <div class="template-card" data-template="detailed">
+          <i class="fas fa-list-alt text-3xl text-green-600 mb-3"></i>
+          <h4 class="font-semibold mb-2">Detailed</h4>
+          <p class="text-sm text-gray-600">Comprehensive format</p>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="savedTemplates">Saved Templates</label>
+        <select id="savedTemplates" name="savedTemplates">
+          <option value="">Choose a saved template...</option>
+          <% if (savedTemplates && savedTemplates.length > 0) { %>
+            <% savedTemplates.forEach(template => { %>
+              <option value="<%= template.id %>" data-settings="<%= JSON.stringify(template.settings) %>">
+                <%= template.name %> <% if (template.category === 'default') { %>(Default)<% } %>
+              </option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+    </div>
+
+    <!-- Header & Styling -->
+    <div class="export-section">
+      <h3><i class="fas fa-paint-brush"></i> Header & Styling</h3>
       
       <div class="grid-2">
         <div class="form-group">
-          <label for="customHeader">Custom Header Text</label>
-          <input type="text" id="customHeader" name="customHeader" value="QUOTATION FOR WATERPROOFING" placeholder="Enter custom header text">
+          <label for="customHeader">
+            <span class="tooltip">
+              Custom Header Text
+              <span class="tooltiptext">Customize the main title of your quotation</span>
+            </span>
+          </label>
+          <input type="text" id="customHeader" name="customHeader" value="QUOTATION FOR WATERPROOFING" placeholder="Enter custom header text" maxlength="100">
           <small class="text-gray-500">E.g., "QUOTATION FOR EPOXY", "QUOTATION FOR PAINTING"</small>
         </div>
         
@@ -305,8 +588,8 @@
           <label for="qrSize">QR Code Size</label>
           <select id="qrSize" name="qrSize">
             <option value="80">Small (80px)</option>
-            <option value="100" selected>Medium (100px)</option>
-            <option value="120">Large (120px)</option>
+            <option value="100">Medium (100px)</option>
+            <option value="120" selected>Large (120px)</option>
             <option value="150">Extra Large (150px)</option>
           </select>
         </div>
@@ -358,46 +641,53 @@
 
     <!-- Paper & Layout -->
     <div class="export-section">
-      <h3>📄 Paper & Layout</h3>
+      <h3><i class="fas fa-file-pdf"></i> Paper & Layout</h3>
       
       <div class="grid-3">
         <div class="form-group">
           <label for="paperSize">Paper Size</label>
           <select id="paperSize" name="paperSize">
-            <option value="A4" selected>A4</option>
-            <option value="A3">A3</option>
-            <option value="Letter">Letter</option>
-            <option value="Legal">Legal</option>
+            <option value="A4" selected>A4 (210×297mm)</option>
+            <option value="A3">A3 (297×420mm)</option>
+            <option value="Letter">Letter (8.5×11")</option>
+            <option value="Legal">Legal (8.5×14")</option>
           </select>
         </div>
         
         <div class="form-group">
-          <label for="letterhead">Letterhead</label>
+          <label for="orientation">Orientation</label>
+          <select id="orientation" name="orientation">
+            <option value="portrait" selected>Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="letterhead">Letterhead Style</label>
           <select id="letterhead" name="letterhead">
             <option value="plain" selected>Plain</option>
-            <option value="letterhead-1">Letterhead 1</option>
-            <option value="letterhead-2">Letterhead 2</option>
-            <option value="invoice">Invoice Format</option>
-            <option value="custom-1">Custom 1</option>
-            <option value="custom-2">Custom 2</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="watermark">Watermark (Optional)</label>
-          <select id="watermark" name="watermark">
-            <option value="">None</option>
-            <option value="DRAFT">DRAFT</option>
-            <option value="CONFIDENTIAL">CONFIDENTIAL</option>
-            <option value="COPY">COPY</option>
-            <option value="SAMPLE">SAMPLE</option>
+            <option value="professional">Professional</option>
+            <option value="corporate">Corporate</option>
+            <option value="modern">Modern</option>
           </select>
         </div>
       </div>
       
+      <div class="form-group">
+        <label for="watermark">Watermark (Optional)</label>
+        <select id="watermark" name="watermark">
+          <option value="">None</option>
+          <option value="DRAFT">DRAFT</option>
+          <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+          <option value="COPY">COPY</option>
+          <option value="SAMPLE">SAMPLE</option>
+          <option value="ORIGINAL">ORIGINAL</option>
+        </select>
+      </div>
+      
       <!-- Margins -->
       <div class="form-group">
-        <label>Margins</label>
+        <label>Page Margins</label>
         <div class="grid-4">
           <div>
             <label for="marginTop" class="text-xs">Top</label>
@@ -421,9 +711,9 @@
             <label for="marginBottom" class="text-xs">Bottom</label>
             <select id="marginBottom" name="marginBottom">
               <option value="15mm">15mm</option>
-              <option value="20mm" selected>20mm</option>
-              <option value="25mm">25mm</option>
+              <option value="25mm" selected>25mm</option>
               <option value="30mm">30mm</option>
+              <option value="35mm">35mm</option>
             </select>
           </div>
           <div>
@@ -439,9 +729,36 @@
       </div>
     </div>
 
+    <!-- Advanced Features -->
+    <div class="export-section">
+      <h3><i class="fas fa-cogs"></i> Advanced Features</h3>
+      
+      <div class="grid-2">
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeHeaderFooter" name="includeHeaderFooter">
+          <label for="includeHeaderFooter">Include Header & Footer</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="multiPage" name="multiPage">
+          <label for="multiPage">Multi-page Layout</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="pageBreaks" name="pageBreaks">
+          <label for="pageBreaks">Smart Page Breaks</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeLogo" name="includeLogo">
+          <label for="includeLogo">Include Company Logo</label>
+        </div>
+      </div>
+    </div>
+
     <!-- Signature & Stamp -->
     <div class="export-section">
-      <h3>✍️ Signature & Stamp</h3>
+      <h3><i class="fas fa-signature"></i> Signature & Stamp</h3>
       
       <div class="grid-2">
         <div>
@@ -452,8 +769,8 @@
           
           <div class="form-group" id="signatureOptions" style="display: none;">
             <label for="signatureImage">Signature Image (Optional)</label>
-            <input type="file" id="signatureImage" name="signatureImage" accept="image/*">
-            <small class="text-gray-500">Upload signature image (PNG, JPG)</small>
+            <input type="file" id="signatureImage" name="signatureImage" accept="image/*" class="file-input">
+            <small class="text-gray-500">Upload signature image (PNG, JPG - Max 2MB)</small>
           </div>
         </div>
         
@@ -498,7 +815,7 @@
 
     <!-- Image Export Options -->
     <div class="export-section">
-      <h3>🖼️ Image Export Options</h3>
+      <h3><i class="fas fa-image"></i> Image Export Options</h3>
       
       <div class="grid-3">
         <div class="form-group">
@@ -506,7 +823,8 @@
           <select id="imageFormat" name="imageFormat">
             <option value="png" selected>PNG (High Quality)</option>
             <option value="jpg">JPG (Smaller File)</option>
-            <option value="jpeg">JPEG (Smaller File)</option>
+            <option value="jpeg">JPEG (Optimized)</option>
+            <option value="webp">WebP (Modern)</option>
           </select>
         </div>
         
@@ -520,34 +838,65 @@
           </select>
         </div>
         
+        <div class="form-group">
+          <label for="imageWidth">Image Width (px)</label>
+          <select id="imageWidth" name="imageWidth">
+            <option value="800">800px (Small)</option>
+            <option value="1200" selected>1200px (Standard)</option>
+            <option value="1600">1600px (Large)</option>
+            <option value="2400">2400px (Print Quality)</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="grid-3">
         <div class="checkbox-group">
           <input type="checkbox" id="optimizeImage" name="optimizeImage" checked>
-          <label for="optimizeImage">Optimize for WhatsApp</label>
+          <label for="optimizeImage">Optimize for Web</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="highDPI" name="highDPI">
+          <label for="highDPI">High DPI (Retina)</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="transparentBackground" name="transparentBackground">
+          <label for="transparentBackground">Transparent Background</label>
         </div>
       </div>
     </div>
 
     <!-- Email Integration -->
     <div class="export-section">
-      <h3>📧 Email Integration</h3>
+      <h3><i class="fas fa-envelope"></i> Email Integration</h3>
       
       <div class="grid-2">
         <div class="form-group">
-          <label for="emailTo">Email To</label>
-          <input type="email" id="emailTo" name="emailTo" value="<%= quotation.client_phone ? quotation.client_name.toLowerCase().replace(/\s+/g, '') + '@gmail.com' : '' %>" placeholder="client@email.com">
+          <label for="emailTo">Email Address</label>
+          <input type="email" id="emailTo" name="emailTo" value="<%= quotation.client_email || '' %>" placeholder="client@email.com">
         </div>
         
         <div class="form-group">
-          <label for="emailSubject">Email Subject</label>
-          <input type="text" id="emailSubject" name="emailSubject" value="Quotation <%= quotation.quotation_no %> - <%= quotation.client_name %>" placeholder="Email subject">
+          <label for="emailTemplate">Email Template</label>
+          <select id="emailTemplate" name="emailTemplate">
+            <option value="professional" selected>Professional</option>
+            <option value="friendly">Friendly</option>
+            <option value="formal">Formal</option>
+          </select>
         </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="emailSubject">Email Subject</label>
+        <input type="text" id="emailSubject" name="emailSubject" value="Quotation <%= quotation.quotation_no %> - <%= quotation.client_name %>" placeholder="Email subject">
       </div>
       
       <div class="form-group">
         <label for="emailBody">Email Message</label>
         <textarea id="emailBody" name="emailBody" rows="4" placeholder="Enter email message...">Dear <%= quotation.client_name %>,
 
-Please find attached quotation <%= quotation.quotation_no %> for your review.
+Please find attached quotation <%= quotation.quotation_no %> for your waterproofing project.
 
 If you have any questions, please don't hesitate to contact us.
 
@@ -556,48 +905,74 @@ International Pipes Technology Co LLC</textarea>
       </div>
     </div>
 
+    <!-- WhatsApp Integration -->
+    <div class="export-section">
+      <h3><i class="fab fa-whatsapp"></i> WhatsApp Integration</h3>
+      
+      <div class="form-group">
+        <label for="whatsappTemplate">WhatsApp Template</label>
+        <select id="whatsappTemplate" name="whatsappTemplate">
+          <option value="professional" selected>Professional</option>
+          <option value="friendly">Friendly</option>
+          <option value="brief">Brief</option>
+          <option value="detailed">Detailed</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>WhatsApp Preview</label>
+        <div id="whatsappPreview" class="bg-green-50 border border-green-200 rounded-lg p-4 text-sm font-mono">
+          Click "Preview WhatsApp" to see the message template
+        </div>
+      </div>
+    </div>
+
     <!-- Export Actions -->
     <div class="export-section">
-      <h3>🚀 Export Actions</h3>
+      <h3><i class="fas fa-download"></i> Export Actions</h3>
       
       <!-- Preview Button -->
-      <div class="export-buttons">
+      <div class="export-buttons mb-4">
         <button type="button" class="export-btn preview" onclick="generatePreview()">
-          🔍 Preview Export
+          <i class="fas fa-eye"></i> Preview Export
         </button>
       </div>
       
       <!-- Main Export Buttons -->
       <div class="export-buttons">
         <button type="button" class="export-btn pdf" onclick="exportFile('pdf')">
-          📄 Export PDF
+          <i class="fas fa-file-pdf"></i> Export PDF
         </button>
         
         <button type="button" class="export-btn excel" onclick="exportFile('excel')">
-          📊 Export Excel
+          <i class="fas fa-file-excel"></i> Export Excel
         </button>
         
         <button type="button" class="export-btn image" onclick="exportFile('image')">
-          🖼️ Export Image
+          <i class="fas fa-image"></i> Export Image
         </button>
         
         <button type="button" class="export-btn email" onclick="exportEmail()">
-          📧 Email Client
+          <i class="fas fa-envelope"></i> Email Client
         </button>
         
         <button type="button" class="export-btn whatsapp" onclick="openWhatsApp()">
-          💬 WhatsApp
+          <i class="fab fa-whatsapp"></i> WhatsApp Share
         </button>
       </div>
       
       <!-- Template Actions -->
       <div class="export-buttons">
-        <button type="button" class="export-btn" style="background: #6b7280; color: white;" onclick="saveTemplate()">
-          💾 Save Template
+        <button type="button" class="export-btn secondary" onclick="saveTemplate()">
+          <i class="fas fa-save"></i> Save Template
         </button>
         
-        <button type="button" class="export-btn" style="background: #6b7280; color: white;" onclick="loadTemplate()">
-          📁 Load Template
+        <button type="button" class="export-btn secondary" onclick="loadTemplate()">
+          <i class="fas fa-folder-open"></i> Load Template
+        </button>
+        
+        <button type="button" class="export-btn secondary" onclick="resetForm()">
+          <i class="fas fa-undo"></i> Reset Form
         </button>
       </div>
     </div>
@@ -606,31 +981,186 @@ International Pipes Technology Co LLC</textarea>
 
   <!-- Preview Container -->
   <div id="previewContainer" class="preview-container">
-    <h3 class="text-lg font-semibold mb-4">📋 Export Preview</h3>
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+        <i class="fas fa-eye text-blue-600"></i> Export Preview
+      </h3>
+      <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700 text-2xl">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
     <iframe id="previewFrame" class="preview-iframe"></iframe>
   </div>
 
 </div>
 
 <script>
-// 🔥 Export Configuration JavaScript
+// 🔥 Enhanced Export Configuration JavaScript
 
-// Toggle signature options
-document.getElementById('includeSignature').addEventListener('change', function() {
-  document.getElementById('signatureOptions').style.display = this.checked ? 'block' : 'none';
+// Initialize form state
+let currentTemplate = 'professional';
+let isExporting = false;
+
+// Template configurations
+const templateConfigs = {
+  professional: {
+    headerFontSize: '28px',
+    bodyFontSize: '14px',
+    tableFontSize: '12px',
+    paperSize: 'A4',
+    includeHeaderFooter: true,
+    whatsappTemplate: 'professional',
+    emailTemplate: 'professional'
+  },
+  modern: {
+    headerFontSize: '32px',
+    bodyFontSize: '16px',
+    tableFontSize: '14px',
+    paperSize: 'A4',
+    letterhead: 'modern',
+    whatsappTemplate: 'friendly',
+    emailTemplate: 'friendly'
+  },
+  detailed: {
+    headerFontSize: '24px',
+    bodyFontSize: '12px',
+    tableFontSize: '10px',
+    paperSize: 'A4',
+    includeSignature: true,
+    includeHeaderFooter: true,
+    whatsappTemplate: 'detailed',
+    emailTemplate: 'formal'
+  }
+};
+
+// Enhanced event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Enhanced export configuration initialized');
+  
+  // Initialize form
+  initializeForm();
+  
+  // Template selection
+  document.querySelectorAll('.template-card').forEach(card => {
+    card.addEventListener('click', function() {
+      selectTemplate(this.dataset.template);
+    });
+  });
+  
+  // Saved templates
+  document.getElementById('savedTemplates').addEventListener('change', function() {
+    if (this.value) {
+      loadSavedTemplate(this.value);
+    }
+  });
+  
+  // Conditional visibility
+  setupConditionalVisibility();
+  
+  // Update timestamp
+  updateTimestamp();
+  setInterval(updateTimestamp, 60000);
+  
+  // Auto-save settings
+  document.getElementById('export-form').addEventListener('change', autoSaveSettings);
 });
 
-// Toggle stamp options
-document.getElementById('includeStamp').addEventListener('change', function() {
-  document.getElementById('stampOptions').style.display = this.checked ? 'block' : 'none';
-});
+// Initialize form with default values
+function initializeForm() {
+  // Set default template
+  selectTemplate('professional');
+  
+  // Auto-generate email if client has email
+  const clientEmail = '<%= quotation.client_email || "" %>';
+  if (clientEmail && !document.getElementById('emailTo').value) {
+    document.getElementById('emailTo').value = clientEmail;
+  }
+  
+  // Generate default email subject
+  if (!document.getElementById('emailSubject').value) {
+    document.getElementById('emailSubject').value = `Quotation <%= quotation.quotation_no %> - <%= quotation.client_name %>`;
+  }
+}
 
-// Toggle stamp position controls
-document.getElementById('manualStampPosition').addEventListener('change', function() {
-  document.getElementById('stampPositionControls').style.display = this.checked ? 'block' : 'none';
-});
+// Setup conditional visibility for form elements
+function setupConditionalVisibility() {
+  // Signature options
+  document.getElementById('includeSignature').addEventListener('change', function() {
+    document.getElementById('signatureOptions').style.display = this.checked ? 'block' : 'none';
+  });
 
-// Get form data
+  // Stamp options
+  document.getElementById('includeStamp').addEventListener('change', function() {
+    document.getElementById('stampOptions').style.display = this.checked ? 'block' : 'none';
+  });
+
+  // Stamp position controls
+  document.getElementById('manualStampPosition').addEventListener('change', function() {
+    document.getElementById('stampPositionControls').style.display = this.checked ? 'block' : 'none';
+  });
+  
+  // WhatsApp template preview
+  document.getElementById('whatsappTemplate').addEventListener('change', updateWhatsAppPreview);
+  updateWhatsAppPreview();
+}
+
+// Select template and apply settings
+function selectTemplate(templateName) {
+  currentTemplate = templateName;
+  
+  // Update UI
+  document.querySelectorAll('.template-card').forEach(card => {
+    card.classList.remove('selected');
+  });
+  document.querySelector(`[data-template="${templateName}"]`).classList.add('selected');
+  
+  // Apply template settings
+  const config = templateConfigs[templateName];
+  Object.entries(config).forEach(([key, value]) => {
+    const element = document.getElementById(key);
+    if (element) {
+      if (element.type === 'checkbox') {
+        element.checked = value;
+      } else {
+        element.value = value;
+      }
+      element.dispatchEvent(new Event('change'));
+    }
+  });
+  
+  showMessage(`Template "${templateName}" applied successfully!`, 'success');
+}
+
+// Load saved template
+function loadSavedTemplate(templateId) {
+  const option = document.querySelector(`option[value="${templateId}"]`);
+  if (option) {
+    try {
+      const settings = JSON.parse(option.dataset.settings);
+      applySettings(settings);
+      showMessage(`Template loaded successfully!`, 'success');
+    } catch (error) {
+      showMessage('Failed to load template settings', 'error');
+    }
+  }
+}
+
+// Apply settings to form
+function applySettings(settings) {
+  Object.entries(settings).forEach(([key, value]) => {
+    const element = document.getElementById(key);
+    if (element) {
+      if (element.type === 'checkbox') {
+        element.checked = value;
+      } else {
+        element.value = value;
+      }
+      element.dispatchEvent(new Event('change'));
+    }
+  });
+}
+
+// Get current form settings
 function getExportSettings() {
   const formData = new FormData(document.getElementById('export-form'));
   const settings = {};
@@ -640,237 +1170,103 @@ function getExportSettings() {
   }
   
   // Add checkboxes
-  settings.includeSignature = document.getElementById('includeSignature').checked;
-  settings.includeStamp = document.getElementById('includeStamp').checked;
-  settings.manualStampPosition = document.getElementById('manualStampPosition').checked;
-  settings.optimizeImage = document.getElementById('optimizeImage').checked;
+  const checkboxes = ['includeSignature', 'includeStamp', 'manualStampPosition', 'optimizeImage', 
+                     'highDPI', 'transparentBackground', 'includeHeaderFooter', 'multiPage', 
+                     'pageBreaks', 'includeLogo'];
+  
+  checkboxes.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      settings[id] = element.checked;
+    }
+  });
   
   return settings;
 }
 
-// Generate Preview
-async function generatePreview() {
-  const previewBtn = document.querySelector('.export-btn.preview');
-  const originalText = previewBtn.textContent;
+// Update WhatsApp preview
+function updateWhatsAppPreview() {
+  const template = document.getElementById('whatsappTemplate').value;
+  const preview = document.getElementById('whatsappPreview');
   
-  try {
-    previewBtn.classList.add('loading');
-    previewBtn.textContent = 'Generating Preview...';
-    
-    const settings = getExportSettings();
-    
-    const response = await fetch(`/quotations/export/<%= quotation.id %>/preview`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(settings)
-    });
-    
-    if (response.ok) {
-      const html = await response.text();
-      document.getElementById('previewFrame').srcdoc = html;
-      document.getElementById('previewContainer').classList.add('show');
-      
-      // Scroll to preview
-      document.getElementById('previewContainer').scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    } else {
-      throw new Error('Preview generation failed');
-    }
-    
-  } catch (error) {
-    console.error('Preview error:', error);
-    alert('Failed to generate preview. Please try again.');
-  } finally {
-    previewBtn.classList.remove('loading');
-    previewBtn.textContent = originalText;
-  }
-}
-
-// Export File
-async function exportFile(format) {
-  const exportBtn = document.querySelector(`.export-btn.${format}`);
-  const originalText = exportBtn.textContent;
+  const templates = {
+    professional: `📋 *QUOTATION DETAILS*\n\n🏢 *Client:* <%= quotation.client_name %>\n💰 *Total:* OMR <%= parseFloat(quotation.grand_total).toFixed(3) %>\n📅 *Date:* <%= new Date(quotation.tdate).toLocaleDateString('en-GB') %>\n\n💧 *International Pipes Technology Co LLC*`,
+    friendly: `Hello <%= quotation.client_name %>! 👋\n\nYour quotation is ready! 📋✨\n💰 Total: OMR <%= parseFloat(quotation.grand_total).toFixed(3) %>\n\nQuestions? Just reply! 😊`,
+    brief: `📄 Quotation <%= quotation.quotation_no %>\n💰 OMR <%= parseFloat(quotation.grand_total).toFixed(3) %>\n📞 Contact us`,
+    detailed: `🏗️ *WATERPROOFING QUOTATION*\n\n*CLIENT:* <%= quotation.client_name %>\n*AMOUNT:* OMR <%= parseFloat(quotation.grand_total).toFixed(3) %>\n*WARRANTY:* <%= quotation.warranty || 17 %> Years\n\n*International Pipes Technology Co LLC*`
+  };
   
-  try {
-    exportBtn.classList.add('loading');
-    exportBtn.disabled = true;
-    
-    const settings = getExportSettings();
-    settings.imageFormat = document.getElementById('imageFormat').value;
-    
-    const response = await fetch(`/quotations/export/<%= quotation.id %>/${format}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(settings)
-    });
-    
-    if (response.ok) {
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      
-      // Get filename from response header or generate one
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `quotation-<%= quotation.quotation_no %>.${format}`;
-      
-      if (contentDisposition) {
-        const matches = /filename="([^"]*)"/.exec(contentDisposition);
-        if (matches) filename = matches[1];
-      }
-      
-      // Trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      
-      showMessage(`${format.toUpperCase()} export completed successfully! 🎉`, 'success');
-    } else {
-      throw new Error(`${format} export failed`);
-    }
-    
-  } catch (error) {
-    console.error(`${format} export error:`, error);
-    alert(`Failed to export ${format.toUpperCase()}. Please try again.`);
-  } finally {
-    exportBtn.classList.remove('loading');
-    exportBtn.disabled = false;
-    exportBtn.textContent = originalText;
-  }
+  preview.textContent = templates[template] || templates.professional;
 }
 
-// Export via Email
-async function exportEmail() {
-  const emailBtn = document.querySelector('.export-btn.email');
-  const originalText = emailBtn.textContent;
+// Show progress
+function showProgress(stage, percentage) {
+  const progressSection = document.getElementById('progressSection');
+  const progressFill = document.getElementById('progressFill');
+  const progressPercent = document.getElementById('progressPercent');
+  const progressStatus = document.getElementById('progressStatus');
   
-  try {
-    emailBtn.classList.add('loading');
-    emailBtn.disabled = true;
-    
-    const settings = getExportSettings();
-    settings.emailTo = document.getElementById('emailTo').value;
-    settings.emailSubject = document.getElementById('emailSubject').value;
-    settings.emailBody = document.getElementById('emailBody').value;
-    settings.exportFormat = 'pdf'; // Default to PDF for email
-    
-    if (!settings.emailTo) {
-      alert('Please enter an email address');
-      return;
-    }
-    
-    const response = await fetch(`/quotations/export/<%= quotation.id %>/email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(settings)
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      // Open email client
-      window.location.href = result.mailtoLink;
-      
-      // Also trigger download of the attachment
-      setTimeout(() => {
-        window.open(result.downloadUrl, '_blank');
-      }, 1000);
-      
-      showMessage('Email client opened! Download the attachment separately.', 'info');
-    } else {
-      throw new Error(result.error || 'Email preparation failed');
-    }
-    
-  } catch (error) {
-    console.error('Email export error:', error);
-    alert('Failed to prepare email. Please try again.');
-  } finally {
-    emailBtn.classList.remove('loading');
-    emailBtn.disabled = false;
-    emailBtn.textContent = originalText;
-  }
+  progressSection.classList.remove('hidden');
+  progressFill.style.width = percentage + '%';
+  progressPercent.textContent = percentage + '%';
+  progressStatus.textContent = stage;
 }
 
-// Open WhatsApp Integration
-function openWhatsApp() {
-  window.open(`/quotations/export/<%= quotation.id %>/whatsapp`, '_blank');
+// Hide progress
+function hideProgress() {
+  document.getElementById('progressSection').classList.add('hidden');
 }
 
-// Save Template
-function saveTemplate() {
-  const templateName = prompt('Enter template name:');
-  if (!templateName) return;
-  
-  const settings = getExportSettings();
-  
-  fetch('/quotations/export/save-template', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      templateName: templateName,
-      templateSettings: settings
-    })
-  })
-  .then(response => response.json())
-  .then(result => {
-    if (result.success) {
-      showMessage(`Template "${templateName}" saved successfully! 💾`, 'success');
-    } else {
-      throw new Error(result.error);
-    }
-  })
-  .catch(error => {
-    console.error('Template save error:', error);
-    alert('Failed to save template. Please try again.');
-  });
-}
-
-// Load Template (placeholder - would need template list)
-function loadTemplate() {
-  alert('Template loading feature coming soon! 🚀');
-}
-
-// Show message function
+// Show message
 function showMessage(message, type = 'success') {
+  const container = document.getElementById('messagesContainer');
   const messageDiv = document.createElement('div');
-  messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 ${
-    type === 'success' ? 'bg-green-500' : type === 'info' ? 'bg-blue-500' : 'bg-red-500'
-  }`;
-  messageDiv.textContent = message;
+  messageDiv.className = `message ${type} flex items-center gap-3`;
+  messageDiv.style.display = 'flex';
   
-  document.body.appendChild(messageDiv);
+  const icon = type === 'success' ? 'fas fa-check-circle' : 
+               type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
+  
+  messageDiv.innerHTML = `
+    <i class="${icon}"></i>
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove()" class="ml-auto text-current opacity-70 hover:opacity-100">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+  
+  container.appendChild(messageDiv);
   
   setTimeout(() => {
-    messageDiv.remove();
-  }, 4000);
+    if (messageDiv.parentElement) {
+      messageDiv.remove();
+    }
+  }, 5000);
 }
 
-// Initialize form
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Export configuration initialized');
-  
-  // Auto-generate email if client phone exists
-  const clientPhone = '<%= quotation.client_phone || "" %>';
-  if (clientPhone && !document.getElementById('emailTo').value) {
-    // Try to generate an email based on client name
-    const clientName = '<%= quotation.client_name %>';
-    const emailSuggestion = clientName.toLowerCase().replace(/\s+/g, '.') + '@gmail.com';
-    document.getElementById('emailTo').placeholder = emailSuggestion;
-  }
-});
-</script>
+// Update timestamp
+function updateTimestamp() {
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+}
 
-</body>
-</html>
+// Auto-save settings to localStorage
+function autoSaveSettings() {
+  try {
+    const settings = getExportSettings();
+    localStorage.setItem('quotepro_export_settings', JSON.stringify(settings));
+  } catch (error) {
+    console.error('Failed to auto-save settings:', error);
+  }
+}
+
+// Generate Preview
+async function generatePreview() {
+  if (isExporting) return;
+  
+  const previewBtn = document.querySelector('.export-btn.preview');
+  const originalText = previewBtn.innerHTML;
+  
+  try {
+    isExporting = true;
+    previewBtn.classList.add('loading');
+    previewBtn.innerHTML = '<i class="fas fa-spinner"></i> Generating...

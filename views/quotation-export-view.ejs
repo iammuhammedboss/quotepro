@@ -1,557 +1,1219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quotation Preview</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quotation #<%= quotation.quotation_no %> - International Pipes Technology Co LLC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    body {
+    /* 🎨 Enhanced CSS Variables for Professional Design */
+    :root {
+      --header-font-size: <%= exportSettings.headerFontSize || '28px' %>;
+      --subheader-font-size: <%= exportSettings.subheaderFontSize || '18px' %>;
+      --body-font-size: <%= exportSettings.bodyFontSize || '14px' %>;
+      --table-font-size: <%= exportSettings.tableFontSize || '12px' %>;
+      --small-font-size: <%= exportSettings.smallFontSize || '11px' %>;
+      
+      /* Professional Color Palette */
+      --primary-color: #c91f1f;
+      --primary-dark: #a91717;
+      --secondary-color: #2563eb;
+      --success-color: #16a34a;
+      --warning-color: #ea580c;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      
+      /* Border Radius */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+    
+    /* 🎯 Enhanced Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
       margin: 0;
       padding: 20px;
-      font-family: 'Arial', sans-serif;
       background: white;
-      color: #333;
-      line-height: 1.4;
+      color: var(--gray-900);
+      font-size: var(--body-font-size);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     
-    .quotation-container {
-      max-width: 210mm;
-      margin: 0 auto;
-      background: white;
-      position: relative;
-      min-height: 297mm;
-      <% if (exportSettings.paperType && exportSettings.paperType.includes('letterhead')) { %>
-      background-image: url('/images/eurotech-letterhead.jpg');
-      background-size: cover;
-      background-position: center;
+    /* 🖨️ Enhanced Print Styles */
+    @media print {
+      body { 
+        margin: 0; 
+        padding: 12px; 
+        font-size: 12px;
+      }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always !important; }
+      .page-break-avoid { page-break-inside: avoid !important; }
+      .items-table thead { display: table-header-group; }
+      .signature-section { page-break-inside: avoid !important; }
+      .warranty-section { page-break-inside: avoid !important; }
+      .summary-section { page-break-inside: avoid !important; }
+      
+      /* Ensure colors print correctly */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+    }
+    
+    /* 📄 Letterhead Styles */
+    <% if (exportSettings.letterhead && exportSettings.letterhead !== 'plain') { %>
+    .letterhead {
+      background-image: url('/images/letterheads/<%= exportSettings.letterhead %>.png');
       background-repeat: no-repeat;
-      <% } %>
+      background-position: top center;
+      background-size: contain;
+      min-height: 180px;
+      padding-top: 190px;
+    }
+    <% } %>
+    
+    /* 💧 Watermark Styles */
+    <% if (exportSettings.watermark) { %>
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 84px;
+      color: rgba(200, 200, 200, 0.15);
+      z-index: -1;
+      pointer-events: none;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 8px;
+    }
+    <% } %>
+    
+    /* 🏢 Enhanced Header Section */
+    .document-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+      align-items: start;
     }
     
-    /* ✅ Letterhead overlay for content */
-    .content-overlay {
-      <% if (exportSettings.paperType && exportSettings.paperType.includes('letterhead')) { %>
-      background: rgba(255, 255, 255, 0.95);
-      margin: 60px 40px 40px 40px;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      <% } else { %>
-      padding: 40px;
-      <% } %>
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
     }
     
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      border-bottom: 3px solid #dc2626;
-      padding-bottom: 20px;
+    .company-info {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 12px rgba(201, 31, 31, 0.2);
+    }
+    
+    .company-name {
+      font-size: calc(var(--header-font-size) - 4px);
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+      letter-spacing: 0.5px;
+    }
+    
+    .company-tagline {
+      font-size: var(--body-font-size);
+      opacity: 0.95;
+      font-weight: 500;
     }
     
     .main-title {
-      font-size: <%= exportSettings.headerFontSize || '28px' %>;
-      font-weight: bold;
-      color: #dc2626;
-      margin: 0 0 10px 0;
+      font-size: var(--header-font-size);
+      font-weight: 700;
+      color: var(--primary-color);
+      margin: 0;
+      text-transform: uppercase;
       letter-spacing: 1px;
-    }
-    
-    .vat-number {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 20px;
-    }
-    
-    .quotation-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-    
-    .quotation-details {
-      border-left: 4px solid #dc2626;
-      padding-left: 15px;
-    }
-    
-    .quotation-details div {
-      margin-bottom: 5px;
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
-    }
-    
-    .quotation-details strong {
-      color: #dc2626;
-    }
-    
-    .qr-container {
       text-align: center;
-      border: 2px solid #dc2626;
-      border-radius: 8px;
-      padding: 10px;
-      background: white;
+      padding: var(--spacing-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      border: 2px solid var(--primary-color);
+    }
+    
+    .sub-title {
+      font-size: var(--subheader-font-size);
+      font-weight: 600;
+      color: var(--gray-600);
+      text-align: center;
+      margin-top: var(--spacing-sm);
+    }
+    
+    /* 📋 Enhanced Quote Info */
+    .quote-info {
+      background: var(--gray-50);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--primary-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .quote-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-md);
+    }
+    
+    .quote-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+    
+    .quote-info-label {
+      font-weight: 600;
+      color: var(--gray-600);
+      font-size: var(--small-font-size);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .quote-info-value {
+      font-weight: 700;
+      color: var(--gray-900);
+      font-size: var(--body-font-size);
+    }
+    
+    /* 📱 Enhanced QR Code */
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-md);
     }
     
     .qr-code {
-      width: <%= exportSettings.qrSize || '100px' %>;
-      height: <%= exportSettings.qrSize || '100px' %>;
-      margin-bottom: 5px;
+      background: white;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+      border: 2px solid var(--primary-color);
+      box-shadow: 0 4px 12px rgba(201, 31, 31, 0.15);
+      text-align: center;
     }
     
-    .qr-text {
-      font-size: 10px;
-      color: #666;
+    .qr-code img {
+      display: block;
+      margin: 0 auto var(--spacing-sm) auto;
+      border-radius: var(--radius-sm);
     }
     
-    .two-column {
+    .qr-code-text {
+      font-size: var(--small-font-size);
+      color: var(--gray-600);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* 👥 Enhanced Client Information */
+    .client-section {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin: 30px 0;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
     }
     
-    .section {
-      margin-bottom: 20px;
+    .client-card {
+      background: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s ease;
+    }
+    
+    .client-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .client-card h3 {
+      margin: 0 0 var(--spacing-md) 0;
+      font-size: var(--subheader-font-size);
+      color: var(--primary-color);
+      font-weight: 700;
+      border-bottom: 2px solid var(--gray-100);
+      padding-bottom: var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .client-card h3::before {
+      content: '👤';
+      font-size: 18px;
+    }
+    
+    .client-info {
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .client-label {
+      font-weight: 600;
+      color: var(--gray-600);
+      font-size: var(--small-font-size);
+      display: block;
+      margin-bottom: var(--spacing-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .client-value {
+      color: var(--gray-900);
+      font-size: var(--body-font-size);
+      font-weight: 500;
+    }
+    
+    /* 🏗️ Enhanced Project Information */
+    .project-info {
+      background: linear-gradient(135deg, #f0f7ff, #e0f2fe);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-xl);
+      border-left: 4px solid var(--secondary-color);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+    
+    .project-info h3 {
+      margin: 0 0 var(--spacing-md) 0;
+      color: var(--secondary-color);
+      font-size: var(--subheader-font-size);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .project-info h3::before {
+      content: '🏗️';
+      font-size: 18px;
+    }
+    
+    /* 📊 Enhanced Items Table */
+    .items-section {
+      margin-bottom: var(--spacing-xl);
     }
     
     .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #dc2626;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-      border-bottom: 2px solid #dc2626;
+      font-size: var(--subheader-font-size);
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: var(--spacing-lg);
+      padding: var(--spacing-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
     }
     
-    .client-info, .project-info {
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
+    .section-title::before {
+      content: '📋';
+      font-size: 20px;
     }
     
-    .client-info div, .project-info div {
-      margin-bottom: 8px;
-    }
-    
-    .label {
-      font-weight: bold;
-      color: #555;
-      display: inline-block;
-      width: 80px;
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--gray-200);
     }
     
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
-      font-size: <%= exportSettings.tableFontSize || '12px' %>;
+      margin: 0;
+      font-size: var(--table-font-size);
+      background: white;
     }
     
     .items-table th {
-      background: #dc2626;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
       color: white;
-      padding: 12px 8px;
+      padding: var(--spacing-md) var(--spacing-sm);
       text-align: center;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: var(--small-font-size);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     
     .items-table td {
-      padding: 10px 8px;
-      border-bottom: 1px solid #ddd;
-      text-align: center;
+      padding: var(--spacing-md) var(--spacing-sm);
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: top;
     }
     
     .items-table tr:nth-child(even) {
-      background: #f9f9f9;
+      background-color: var(--gray-50);
     }
     
-    .description-cell {
-      text-align: left !important;
-      max-width: 300px;
+    .items-table tr:hover {
+      background-color: #fef2f2;
     }
     
-    .amount-cell {
-      text-align: right !important;
-      font-weight: bold;
+    .items-table .text-center { text-align: center; }
+    .items-table .text-right { text-align: right; font-weight: 600; }
+    
+    .items-table .amount-high {
+      color: var(--secondary-color);
+      font-weight: 700;
     }
     
-    .totals-section {
-      margin: 20px 0;
+    /* 💰 Enhanced Summary Section */
+    .summary-section {
       display: flex;
       justify-content: flex-end;
+      margin-bottom: var(--spacing-xl);
     }
     
-    .totals-table {
-      width: 300px;
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
+    .summary-table {
+      min-width: 400px;
+      border-collapse: collapse;
+      font-size: var(--body-font-size);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
-    .totals-table td {
-      padding: 8px 12px;
-      border-bottom: 1px solid #ddd;
+    .summary-table td {
+      padding: var(--spacing-md);
+      border: none;
     }
     
-    .totals-table .label-cell {
+    .summary-table .summary-label {
+      background: var(--gray-100);
+      font-weight: 600;
+      text-align: left;
+      color: var(--gray-700);
+      border-right: 1px solid var(--gray-200);
+    }
+    
+    .summary-table .summary-value {
       text-align: right;
-      font-weight: bold;
-      color: #555;
+      font-weight: 600;
+      background: white;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     }
     
-    .totals-table .value-cell {
-      text-align: right;
-      width: 120px;
+    .summary-table .grand-total {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      font-weight: 700;
+      font-size: calc(var(--body-font-size) + 2px);
     }
     
-    .grand-total-row {
-      background: #dc2626 !important;
-      color: white !important;
-      font-weight: bold;
+    .summary-table .grand-total td {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
     
-    .grand-total-row td {
-      border-bottom: none !important;
-    }
-    
+    /* 📝 Enhanced List Sections */
     .list-section {
-      margin: 25px 0;
+      margin-bottom: var(--spacing-xl);
+      page-break-inside: avoid;
     }
     
-    .list-section h3 {
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 15px;
-      padding-bottom: 5px;
-      border-bottom: 1px solid #ddd;
+    .list-section .section-title::before {
+      content: '📝';
+    }
+    
+    .list-section.scope .section-title::before {
+      content: '🎯';
+    }
+    
+    .list-section.materials .section-title::before {
+      content: '🧱';
+    }
+    
+    .list-section.terms .section-title::before {
+      content: '📋';
     }
     
     .list-items {
-      padding-left: 0;
-      margin: 0;
+      background: var(--gray-50);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--success-color);
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
     }
     
-    .list-items li {
-      background: #f8f9fa;
-      margin-bottom: 8px;
-      padding: 10px 15px;
-      border-left: 4px solid #28a745;
-      list-style: none;
-      font-size: <%= exportSettings.bodyFontSize || '14px' %>;
-      position: relative;
+    .list-item {
+      display: flex;
+      margin-bottom: var(--spacing-md);
+      align-items: flex-start;
+      gap: var(--spacing-md);
+      padding: var(--spacing-sm);
+      background: white;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200);
     }
     
-    .list-items li:before {
-      content: counter(list-counter);
-      counter-increment: list-counter;
-      position: absolute;
-      left: -20px;
-      top: 10px;
-      background: #28a745;
-      color: white;
-      width: 20px;
-      height: 20px;
+    .list-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .list-item:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .list-number {
+      font-weight: 700;
+      color: var(--success-color);
+      min-width: 24px;
+      height: 24px;
       border-radius: 50%;
+      background: var(--success-color);
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
+      font-size: var(--small-font-size);
+      flex-shrink: 0;
     }
     
-    .scope-list {
-      counter-reset: list-counter;
+    .list-text {
+      flex: 1;
+      color: var(--gray-800);
+      font-size: var(--body-font-size);
+      line-height: 1.6;
     }
     
-    .materials-list {
-      counter-reset: list-counter;
-    }
-    
-    .terms-list {
-      counter-reset: list-counter;
-    }
-    
+    /* 🛡️ Enhanced Warranty Section */
     .warranty-section {
-      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 20px;
-      margin: 30px 0;
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-xl);
       text-align: center;
-      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .warranty-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .warranty-content {
+      position: relative;
+      z-index: 2;
     }
     
     .warranty-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 10px;
+      font-size: var(--subheader-font-size);
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
     }
     
-    .warranty-years {
-      font-size: 32px;
-      font-weight: bold;
-      margin: 10px 0;
+    .warranty-title::before {
+      content: '🛡️';
+      font-size: 24px;
+    }
+    
+    .warranty-period {
+      font-size: calc(var(--header-font-size) - 2px);
+      font-weight: 700;
+      margin-bottom: var(--spacing-md);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     
     .warranty-note {
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
-      opacity: 0.9;
+      font-size: var(--body-font-size);
+      opacity: 0.95;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
     }
     
-    /* ✅ Signature and Stamp positioning */
+    /* ✍️ Enhanced Signature Section */
     .signature-section {
-      margin-top: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
+      margin-top: var(--spacing-xl);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--spacing-xl);
+      page-break-inside: avoid;
     }
     
-    .signature-box, .stamp-box {
+    .signature-block {
       text-align: center;
+      background: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      border: 2px dashed var(--gray-300);
+      transition: border-color 0.2s ease;
     }
     
-    .signature-image, .stamp-image {
-      max-width: 150px;
-      max-height: 80px;
-      margin-bottom: 10px;
+    .signature-block:hover {
+      border-color: var(--primary-color);
     }
     
     .signature-line {
-      border-top: 1px solid #333;
-      width: 200px;
-      margin: 0 auto;
-      padding-top: 5px;
-      font-size: <%= exportSettings.smallFontSize || '11px' %>;
-      color: #666;
+      border-top: 2px solid var(--gray-800);
+      margin-bottom: var(--spacing-md);
+      height: 80px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      position: relative;
+      background: var(--gray-50);
+      border-radius: var(--radius-sm);
     }
     
-    /* ✅ Print optimizations */
-    @media print {
+    .signature-image {
+      max-width: 180px;
+      max-height: 60px;
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .signature-label {
+      font-weight: 700;
+      color: var(--gray-800);
+      font-size: var(--body-font-size);
+      margin-bottom: var(--spacing-xs);
+    }
+    
+    .company-name {
+      font-size: var(--small-font-size);
+      color: var(--gray-600);
+      font-weight: 500;
+      font-style: italic;
+    }
+    
+    /* 🏢 Enhanced Company Stamp */
+    .stamp {
+      position: absolute;
+      <% if (exportSettings.stampPosition === 'manual') { %>
+      top: <%= exportSettings.stampTop || '200px' %>;
+      left: <%= exportSettings.stampLeft || '100px' %>;
+      <% } else { %>
+      top: 100px;
+      right: 50px;
+      <% } %>
+      opacity: 0.9;
+      z-index: 10;
+      transform: rotate(-15deg);
+      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+    }
+    
+    .stamp img {
+      width: <%= exportSettings.stampSize || '120px' %>;
+      height: auto;
+      border-radius: var(--radius-sm);
+    }
+    
+    /* 📞 Enhanced Footer */
+    .document-footer {
+      margin-top: var(--spacing-xl);
+      padding: var(--spacing-lg);
+      background: var(--gray-900);
+      color: white;
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+    
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .footer-section h4 {
+      color: var(--primary-color);
+      font-size: var(--body-font-size);
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .footer-section p {
+      font-size: var(--small-font-size);
+      line-height: 1.5;
+      opacity: 0.9;
+    }
+    
+    .footer-bottom {
+      border-top: 1px solid var(--gray-700);
+      padding-top: var(--spacing-md);
+      font-size: var(--small-font-size);
+      opacity: 0.8;
+    }
+    
+    /* 📱 Enhanced Responsive Design */
+    @media (max-width: 768px) {
       body {
-        margin: 0;
-        padding: 0;
+        padding: var(--spacing-md);
       }
       
-      .quotation-container {
-        box-shadow: none;
-        border: none;
-        page-break-inside: avoid;
+      .document-header {
+        grid-template-columns: 1fr;
+        text-align: center;
       }
       
-      .content-overlay {
-        background: transparent !important;
-        box-shadow: none !important;
+      .client-section {
+        grid-template-columns: 1fr;
+      }
+      
+      .signature-section {
+        grid-template-columns: 1fr;
+      }
+      
+      .quote-info-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
       }
     }
     
-    /* ✅ Responsive adjustments */
-    @media screen and (max-width: 768px) {
-      .quotation-container {
-        max-width: 100%;
-        margin: 0;
+    /* 🎨 Enhanced Preview Mode */
+    <% if (exportSettings.isPreview) { %>
+    body {
+      background: var(--gray-100);
+      padding: var(--spacing-lg);
+    }
+    
+    .preview-container {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: white;
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--warning-color);
+      color: white;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: var(--small-font-size);
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+    }
+    <% } %>
+    
+    /* 🖼️ Enhanced Image Export Optimizations */
+    <% if (exportSettings.imageFormat) { %>
+    body {
+      padding: var(--spacing-xl);
+      background: white;
+    }
+    
+    .document-header,
+    .client-section,
+    .items-section,
+    .list-section,
+    .warranty-section,
+    .signature-section {
+      margin-bottom: calc(var(--spacing-xl) * 1.2);
+    }
+    
+    .items-table th,
+    .items-table td {
+      padding: calc(var(--spacing-md) * 1.1);
+    }
+    <% } %>
+    
+    /* 🎯 Enhanced Focus States */
+    .focusable:focus {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+    
+    /* 🎨 Enhanced Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .warranty-section::before {
+        animation: none;
       }
       
-      .content-overlay {
-        margin: 20px;
-        padding: 20px;
+      .signature-block,
+      .client-card {
+        transition: none;
+      }
+    }
+    
+    /* 🌙 Dark Mode Support (for preview) */
+    @media (prefers-color-scheme: dark) {
+      <% if (exportSettings.isPreview) { %>
+      .preview-container {
+        background: white; /* Force white background for readability */
+      }
+      <% } %>
+    }
+    
+    /* 📄 Enhanced Print Page Breaks */
+    @page {
+      margin: 15mm;
+      size: <%= exportSettings.paperSize || 'A4' %>;
+    }
+    
+    @media print {
+      .warranty-section {
+        break-inside: avoid;
       }
       
-      .two-column {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-      
-      .quotation-info {
-        flex-direction: column;
-        gap: 20px;
+      .signature-section {
+        break-inside: avoid;
+        margin-top: 40px;
       }
       
       .items-table {
-        font-size: 10px;
+        break-inside: auto;
       }
       
-      .items-table th,
-      .items-table td {
-        padding: 6px 4px;
+      .items-table tr {
+        break-inside: avoid;
+      }
+      
+      .summary-section {
+        break-inside: avoid;
       }
     }
   </style>
 </head>
-<body>
-  <div class="quotation-container">
-    <div class="content-overlay">
+<body class="<% if (exportSettings.letterhead && exportSettings.letterhead !== 'plain') { %>letterhead<% } %> <% if (exportSettings.isPreview) { %>preview-mode<% } %>">
+
+  <!-- Preview Badge -->
+  <% if (exportSettings.isPreview) { %>
+  <div class="preview-badge">
+    📋 PREVIEW MODE
+  </div>
+  <div class="preview-container">
+  <% } %>
+
+  <!-- Watermark -->
+  <% if (exportSettings.watermark) { %>
+  <div class="watermark"><%= exportSettings.watermark %></div>
+  <% } %>
+
+  <!-- Enhanced Document Header -->
+  <div class="document-header">
+    <div class="header-left">
+      <div class="company-info">
+        <div class="company-name">INTERNATIONAL PIPES TECHNOLOGY CO LLC</div>
+        <div class="company-tagline">Your Waterproofing Specialist</div>
+      </div>
       
-      <!-- Header Section -->
-      <div class="header">
-        <h1 class="main-title"><%= exportSettings.customHeader || 'QUOTATION FOR WATERPROOFING' %></h1>
-        <div class="vat-number">VAT NO: OM1100077623</div>
-        
-        <div class="quotation-info">
-          <div class="quotation-details">
-            <div><strong>Quotation No:</strong> <%= quotation.quotation_no %></div>
-            <div><strong>Date:</strong> <%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></div>
+      <div class="main-title"><%= exportSettings.customHeader || 'QUOTATION FOR WATERPROOFING' %></div>
+      <div class="sub-title">VAT NO: OM1100077623 | CR NO: 2231867</div>
+      
+      <div class="quote-info">
+        <div class="quote-info-grid">
+          <div class="quote-info-item">
+            <span class="quote-info-label">Quotation No</span>
+            <span class="quote-info-value"><%= quotation.quotation_no %></span>
           </div>
-          
-          <% if (qrCodeDataURL) { %>
-          <div class="qr-container">
-            <img src="<%= qrCodeDataURL %>" alt="QR Code" class="qr-code">
-            <div class="qr-text">Scan for Quick Access</div>
+          <div class="quote-info-item">
+            <span class="quote-info-label">Date</span>
+            <span class="quote-info-value"><%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></span>
           </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="qr-section">
+      <div class="qr-code">
+        <img src="<%= qrCodeDataURL %>" alt="QR Code" width="<%= exportSettings.qrSize || '120' %>" height="<%= exportSettings.qrSize || '120' %>">
+        <div class="qr-code-text">Scan for Quick Access</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Client Information -->
+  <div class="client-section">
+    <div class="client-card">
+      <h3>Client Details</h3>
+      <div class="client-info">
+        <span class="client-label">Client Name</span>
+        <div class="client-value"><%= quotation.client_name %></div>
+      </div>
+      <% if (quotation.client_phone) { %>
+      <div class="client-info">
+        <span class="client-label">Phone Number</span>
+        <div class="client-value"><%= quotation.client_phone %></div>
+      </div>
+      <% } %>
+      <% if (quotation.client_email) { %>
+      <div class="client-info">
+        <span class="client-label">Email Address</span>
+        <div class="client-value"><%= quotation.client_email %></div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Additional Contacts or Project Info -->
+    <% 
+      const hasAdditionalContacts = quotation.contractor_name || quotation.engineer_name || 
+                                   quotation.subcontractor_name || quotation.attention_name;
+    %>
+    <% if (hasAdditionalContacts) { %>
+    <div class="client-card">
+      <h3>Additional Contacts</h3>
+      
+      <% if (quotation.contractor_name) { %>
+      <div class="client-info">
+        <span class="client-label">Contractor</span>
+        <div class="client-value">
+          <%= quotation.contractor_name %>
+          <% if (quotation.contractor_phone) { %><br><small>📞 <%= quotation.contractor_phone %></small><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (quotation.engineer_name) { %>
+      <div class="client-info">
+        <span class="client-label">Engineer</span>
+        <div class="client-value">
+          <%= quotation.engineer_name %>
+          <% if (quotation.engineer_phone) { %><br><small>📞 <%= quotation.engineer_phone %></small><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (quotation.subcontractor_name) { %>
+      <div class="client-info">
+        <span class="client-label">Subcontractor</span>
+        <div class="client-value">
+          <%= quotation.subcontractor_name %>
+          <% if (quotation.subcontractor_phone) { %><br><small>📞 <%= quotation.subcontractor_phone %></small><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (quotation.attention_name) { %>
+      <div class="client-info">
+        <span class="client-label">Attention</span>
+        <div class="client-value">
+          <%= quotation.attention_name %>
+          <% if (quotation.attention_phone) { %><br><small>📞 <%= quotation.attention_phone %></small><% } %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="client-card">
+      <h3>Project Information</h3>
+      <% if (quotation.project_location) { %>
+      <div class="client-info">
+        <span class="client-label">Project Location</span>
+        <div class="client-value"><%= quotation.project_location %></div>
+      </div>
+      <% } %>
+      <% if (quotation.ref_no) { %>
+      <div class="client-info">
+        <span class="client-label">Reference Number</span>
+        <div class="client-value"><%= quotation.ref_no %></div>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Enhanced Project Details -->
+  <% if (quotation.project_location || quotation.ref_no || quotation.description) { %>
+  <div class="project-info">
+    <h3>Project Information</h3>
+    
+    <div class="quote-info-grid">
+      <% if (quotation.project_location && !hasAdditionalContacts) { %>
+      <div class="client-info">
+        <span class="client-label">Project Location</span>
+        <div class="client-value"><%= quotation.project_location %></div>
+      </div>
+      <% } %>
+
+      <% if (quotation.ref_no) { %>
+      <div class="client-info">
+        <span class="client-label">Reference Number</span>
+        <div class="client-value">
+          <%= quotation.ref_no %>
+          <% if (quotation.ref_date) { %>
+            <br><small>📅 <%= new Date(quotation.ref_date).toLocaleDateString('en-GB') %></small>
           <% } %>
         </div>
       </div>
-      
-      <!-- Client and Project Information -->
-      <div class="two-column">
-        <div class="section">
-          <div class="section-title">Client Details</div>
-          <div class="client-info">
-            <div><span class="label">Name:</span> <%= quotation.client_name || 'N/A' %></div>
-            <div><span class="label">Phone:</span> <%= quotation.client_phone || 'N/A' %></div>
-          </div>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">Project Information</div>
-          <div class="project-info">
-            <div><span class="label">Location:</span> <%= quotation.project_location || 'N/A' %></div>
-            <% if (quotation.ref_no) { %>
-            <div><span class="label">Reference:</span> <%= quotation.ref_no %></div>
-            <% } %>
-            <% if (quotation.description) { %>
-            <div><span class="label">Description:</span> <%= quotation.description %></div>
-            <% } %>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Quotation Items -->
-      <% if (items && items.length > 0) { %>
-      <div class="section">
-        <div class="section-title">Quotation Items</div>
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th style="width: 50px;">SL</th>
-              <th style="width: 40%;">Description</th>
-              <th style="width: 80px;">Qty</th>
-              <th style="width: 80px;">Unit</th>
-              <th style="width: 100px;">Rate (OMR)</th>
-              <th style="width: 120px;">Amount (OMR)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% items.forEach((item, index) => { %>
-            <tr>
-              <td><%= index + 1 %></td>
-              <td class="description-cell"><%= item.description %></td>
-              <td><%= parseFloat(item.qty).toLocaleString() %></td>
-              <td><%= item.unit %></td>
-              <td class="amount-cell"><%= parseFloat(item.rate).toFixed(3) %></td>
-              <td class="amount-cell"><%= parseFloat(item.amount).toFixed(3) %></td>
-            </tr>
-            <% }); %>
-          </tbody>
-        </table>
-        
-        <!-- Totals Section -->
-        <div class="totals-section">
-          <table class="totals-table">
-            <tr>
-              <td class="label-cell">Total Amount:</td>
-              <td class="value-cell">OMR <%= parseFloat(quotation.total_amount || 0).toFixed(3) %></td>
-            </tr>
-            <% if (quotation.discount && parseFloat(quotation.discount) > 0) { %>
-            <tr>
-              <td class="label-cell">Discount:</td>
-              <td class="value-cell">OMR <%= parseFloat(quotation.discount).toFixed(3) %></td>
-            </tr>
-            <% } %>
-            <% if (quotation.vat_rate && parseFloat(quotation.vat_rate) > 0) { %>
-            <tr>
-              <td class="label-cell">VAT (<%= parseFloat(quotation.vat_rate).toFixed(2) %>%):</td>
-              <td class="value-cell">OMR <%= parseFloat(quotation.vat_amount || 0).toFixed(3) %></td>
-            </tr>
-            <% } %>
-            <% if (quotation.round_off && parseFloat(quotation.round_off) !== 0) { %>
-            <tr>
-              <td class="label-cell">Round Off:</td>
-              <td class="value-cell">OMR <%= parseFloat(quotation.round_off).toFixed(3) %></td>
-            </tr>
-            <% } %>
-            <tr class="grand-total-row">
-              <td class="label-cell">Grand Total:</td>
-              <td class="value-cell">OMR <%= parseFloat(quotation.grand_total || 0).toFixed(3) %></td>
-            </tr>
-          </table>
-        </div>
-      </div>
       <% } %>
-      
-      <!-- Scope of Work -->
-      <% if (scope && scope.length > 0) { %>
-      <div class="list-section">
-        <h3>Scope of Work</h3>
-        <ol class="list-items scope-list">
-          <% scope.forEach(item => { %>
-          <li><%= item %></li>
-          <% }); %>
-        </ol>
-      </div>
-      <% } %>
-      
-      <!-- Materials -->
-      <% if (materials && materials.length > 0) { %>
-      <div class="list-section">
-        <h3>Materials</h3>
-        <ol class="list-items materials-list">
-          <% materials.forEach(item => { %>
-          <li><%= item %></li>
-          <% }); %>
-        </ol>
-      </div>
-      <% } %>
-      
-      <!-- Terms & Conditions -->
-      <% if (terms && terms.length > 0) { %>
-      <div class="list-section">
-        <h3>Terms & Conditions</h3>
-        <ol class="list-items terms-list">
-          <% terms.forEach(item => { %>
-          <li><%= item %></li>
-          <% }); %>
-        </ol>
-      </div>
-      <% } %>
-      
-      <!-- Warranty Section -->
-      <% if (quotation.warranty && quotation.warranty > 0) { %>
-      <div class="warranty-section">
-        <div class="warranty-title">Warranty</div>
-        <div class="warranty-years"><%= quotation.warranty %> YEARS WARRANTY</div>
-        <% if (quotation.warranty_note) { %>
-        <div class="warranty-note"><%= quotation.warranty_note %></div>
-        <% } else { %>
-        <div class="warranty-note">WARRANTY ONLY APPLICABLE FOR DONE AREA</div>
+    </div>
+
+    <% if (quotation.description) { %>
+    <div class="client-info" style="margin-top: var(--spacing-md);">
+      <span class="client-label">Project Description</span>
+      <div class="client-value"><%= quotation.description %></div>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+
+  <!-- Enhanced Quotation Items -->
+  <% if (items && items.length > 0) { %>
+  <div class="items-section page-break-avoid">
+    <h3 class="section-title">Quotation Items</h3>
+    <div class="table-container">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width: 6%;">SL</th>
+            <th style="width: 48%;">Description</th>
+            <th style="width: 10%;">Qty</th>
+            <th style="width: 10%;">Unit</th>
+            <th style="width: 13%;">Rate (OMR)</th>
+            <th style="width: 13%;">Amount (OMR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach((item, index) => { %>
+          <tr>
+            <td class="text-center"><strong><%= index + 1 %></strong></td>
+            <td><%= item.description %></td>
+            <td class="text-center"><%= parseFloat(item.qty).toFixed(3) %></td>
+            <td class="text-center"><%= item.unit %></td>
+            <td class="text-right"><%= parseFloat(item.rate).toFixed(3) %></td>
+            <td class="text-right <% if (parseFloat(item.amount) > 1000) { %>amount-high<% } %>">
+              <%= parseFloat(item.amount).toFixed(3) %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Enhanced Summary Section -->
+    <div class="summary-section">
+      <table class="summary-table">
+        <tr>
+          <td class="summary-label">Sub Total:</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.total_amount).toFixed(3) %></td>
+        </tr>
+        <% if (quotation.discount > 0) { %>
+        <tr>
+          <td class="summary-label">Discount:</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.discount).toFixed(3) %></td>
+        </tr>
         <% } %>
-      </div>
-      <% } %>
-      
-      <!-- Signature and Stamp Section -->
-      <% if (exportSettings.includeSignature || exportSettings.includeStamp) { %>
-      <div class="signature-section">
-        <% if (exportSettings.includeSignature) { %>
-        <div class="signature-box">
-          <img src="/images/eurotech-signature.jpg" alt="Signature" class="signature-image">
-          <div class="signature-line">Authorized Signature</div>
-        </div>
+        <tr>
+          <td class="summary-label">VAT (<%= quotation.vat_rate || 5 %>%):</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.vat_amount).toFixed(3) %></td>
+        </tr>
+        <% if (quotation.round_off != 0) { %>
+        <tr>
+          <td class="summary-label">Round Off:</td>
+          <td class="summary-value">OMR <%= parseFloat(quotation.round_off).toFixed(3) %></td>
+        </tr>
         <% } %>
-        
-        <% if (exportSettings.includeStamp) { %>
-        <div class="stamp-box">
-          <img src="/images/eurotech-stamp.jpg" alt="Company Stamp" class="stamp-image">
-          <div class="signature-line">Company Stamp</div>
-        </div>
-        <% } %>
-      </div>
-      <% } %>
-      
+        <tr class="grand-total">
+          <td>GRAND TOTAL:</td>
+          <td>OMR <%= parseFloat(quotation.grand_total).toFixed(3) %></td>
+        </tr>
+      </table>
     </div>
   </div>
+  <% } %>
+
+  <!-- Enhanced Scope of Work -->
+  <% 
+    const hasScope = scope && scope.length > 0 && scope.some(item => item && item.trim());
+  %>
+  <% if (hasScope) { %>
+  <div class="list-section scope">
+    <h3 class="section-title">Scope of Work</h3>
+    <div class="list-items">
+      <% let scopeIndex = 1; %>
+      <% scope.forEach((item) => { %>
+      <% if (item && item.trim()) { %>
+      <div class="list-item">
+        <span class="list-number"><%= scopeIndex %></span>
+        <div class="list-text"><%= item %></div>
+      </div>
+      <% scopeIndex++; %>
+      <% } %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Enhanced Materials -->
+  <% 
+    const hasMaterials = materials && materials.length > 0 && materials.some(item => item && item.trim());
+  %>
+  <% if (hasMaterials) { %>
+  <div class="list-section materials">
+    <h3 class="section-title">Materials</h3>
+    <div class="list-items">
+      <% let materialsIndex = 1; %>
+      <% materials.forEach((item) => { %>
+      <% if (item && item.trim()) { %>
+      <div class="list-item">
+        <span class="list-number"><%= materialsIndex %></span>
+        <div class="list-text"><%= item %></div>
+      </div>
+      <% materialsIndex++; %>
+      <% } %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Enhanced Terms & Conditions -->
+  <% 
+    const hasTerms = terms && terms.length > 0 && terms.some(item => item && item.trim());
+  %>
+  <% if (hasTerms) { %>
+  <div class="list-section terms">
+    <h3 class="section-title">Terms & Conditions</h3>
+    <div class="list-items">
+      <% let termsIndex = 1; %>
+      <% terms.forEach((item) => { %>
+      <% if (item && item.trim()) { %>
+      <div class="list-item">
+        <span class="list-number"><%= termsIndex %></span>
+        <div class="list-text"><%= item %></div>
+      </div>
+      <% termsIndex++; %>
+      <% } %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Enhanced Warranty Section -->
+  <div class="warranty-section">
+    <div class="warranty-content">
+      <div class="warranty-title">Comprehensive Warranty</div>
+      <div class="warranty-period"><%= quotation.warranty || 17 %> YEARS WARRANTY</div>
+      <div class="warranty-note">
+        <% if (quotation.warranty_note) { %>
+        <%= quotation.warranty_note %>
+        <% } else { %>
+        This warranty covers all waterproofing work and materials against defects in workmanship and water leakage. 
+        Our comprehensive warranty ensures your complete peace of mind and protection of your investment.
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Signature Section -->
+  <% if (exportSettings.includeSignature) { %>
+  <div class="signature-section">
+    <div class="signature-block">
+      <div class="signature-line">
+        <% if (exportSettings.signatureImage) { %>
+        <img src="<%= exportSettings.signatureImage %>" alt="Authorized Signature" class="signature-image">
+        <% } %>
+      </div>
+      <div class="signature-label">Authorized Signatory</div>
+      <div class="company-name">International Pipes Technology Co LLC</div>
+    </div>
+    
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-label">Client Acceptance</div>
+      <div class="company-name">Date: _______________</div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Enhanced Company Stamp -->
+  <% if (exportSettings.includeStamp && exportSettings.stampImage) { %>
+  <div class="stamp">
+    <img src="<%= exportSettings.stampImage %>" alt="Company Stamp">
+  </div>
+  <% } %>
+
+  <!-- Enhanced Footer -->
+  <div class="document-footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Contact Information</h4>
+        <p>📞 Phone: +968 96030210</p>
+        <p>📧 Email: eurotechoman.iptc@gmail.com</p>
+        <p>🌐 Website: www.eurotechoman.com</p>
+      </div>
+      
+      <div class="footer-section">
+        <h4>Company Details</h4>
+        <p>🏢 CR No: 2231867</p>
+        <p>💼 VAT No: OM1100077623</p>
+        <p>📍 Salalah, Sultanate of Oman</p>
+      </div>
+      
+      <div class="footer-section">
+        <h4>Quotation Validity</h4>
+        <p>⏰ Valid for: 30 days</p>
+        <p>📅 From: <%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></p>
+        <p>⭐ Quality Assured Services</p>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p>Thank you for choosing International Pipes Technology Co LLC - Your trusted waterproofing specialist with <%= quotation.warranty || 17 %> years comprehensive warranty.</p>
+    </div>
+  </div>
+
+  <% if (exportSettings.isPreview) { %>
+  </div>
+  <% } %>
+
 </body>
 </html>

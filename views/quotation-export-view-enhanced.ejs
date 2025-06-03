@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation <%= quotation.quotation_no %></title>
+    <style>
+        @page {
+            size: <%= exportSettings.paperSize || 'A4' %> <%= exportSettings.orientation || 'portrait' %>;
+            margin: <%= exportSettings.marginTop || '20mm' %> <%= exportSettings.marginRight || '15mm' %> <%= exportSettings.marginBottom || '20mm' %> <%= exportSettings.marginLeft || '15mm' %>;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.4;
+            color: #333;
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') %>px;
+            position: relative;
+        }
+
+        /* Letterhead Styles */
+        .letterhead-container {
+            position: relative;
+            <% if (exportSettings.letterhead === 'eurotech' && exportSettings.paperType !== 'letterhead-paper') { %>
+            background-image: url('/images/eurotech-letterhead.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: top center;
+            min-height: 200px;
+            <% } %>
+        }
+
+        .letterhead-overlay {
+            <% if (exportSettings.letterhead === 'eurotech' && exportSettings.paperType !== 'letterhead-paper') { %>
+            margin-top: 180px;
+            <% } %>
+        }
+
+        /* Watermark */
+        <% if (exportSettings.includeWatermark) { %>
+        body::before {
+            content: "QUOTATION";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 72px;
+            color: rgba(200, 200, 200, 0.2);
+            z-index: -1;
+            pointer-events: none;
+            font-weight: bold;
+        }
+        <% } %>
+
+        /* Header Styles */
+        .quotation-header {
+            text-align: center;
+            margin-bottom: 30px;
+            <% if (exportSettings.paperType === 'letterhead-paper') { %>
+            margin-top: 50px;
+            <% } %>
+        }
+
+        .quotation-title {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'header') %>px;
+            font-weight: bold;
+            color: #C91F1F;
+            margin-bottom: 10px;
+        }
+
+        .company-info {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') - 2 %>px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Quotation Info Grid */
+        .quotation-info {
+            display: table;
+            width: 100%;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+        }
+
+        .info-row {
+            display: table-row;
+        }
+
+        .info-cell {
+            display: table-cell;
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+
+        .info-label {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            width: 20%;
+        }
+
+        .info-value {
+            background-color: white;
+            width: 30%;
+        }
+
+        /* Client Information */
+        .client-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') + 2 %>px;
+            font-weight: bold;
+            color: #C91F1F;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #C91F1F;
+        }
+
+        .client-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .client-info {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .client-info h4 {
+            color: #C91F1F;
+            margin-bottom: 10px;
+        }
+
+        /* Items Table */
+        .items-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: <%= getFontSize(exportSettings.fontSize, 'table') %>px;
+        }
+
+        .items-table th {
+            background-color: #C91F1F;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #C91F1F;
+        }
+
+        .items-table td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .items-table td:nth-child(2) {
+            text-align: left;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* Summary Table */
+        .summary-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .summary-table td {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+        }
+
+        .summary-label {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: right;
+            width: 70%;
+        }
+
+        .summary-value {
+            background-color: white;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .grand-total {
+            background-color: #C91F1F !important;
+            color: white !important;
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') + 2 %>px;
+        }
+
+        /* Sections (Scope, Materials, Terms) */
+        .content-section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .content-section h3 {
+            background-color: #C91F1F;
+            color: white;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') + 1 %>px;
+        }
+
+        .content-list {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .content-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .content-list li:before {
+            content: counter(item-counter);
+            counter-increment: item-counter;
+            position: absolute;
+            left: 0;
+            top: 8px;
+            background-color: #C91F1F;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .scope-section .content-list { counter-reset: item-counter; }
+        .materials-section .content-list { counter-reset: item-counter; }
+        .terms-section .content-list { counter-reset: item-counter; }
+
+        /* Warranty Section */
+        .warranty-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 2px solid #C91F1F;
+            border-radius: 10px;
+            page-break-inside: avoid;
+        }
+
+        .warranty-title {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'header') - 4 %>px;
+            font-weight: bold;
+            color: #C91F1F;
+            margin-bottom: 10px;
+        }
+
+        .warranty-text {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') + 4 %>px;
+            font-weight: bold;
+            color: #C91F1F;
+            margin-bottom: 10px;
+        }
+
+        .warranty-note {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') - 1 %>px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            margin-top: 40px;
+            page-break-inside: avoid;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            min-height: 150px;
+        }
+
+        .warranty-info {
+            flex: 1;
+            max-width: 45%;
+        }
+
+        .signature-area {
+            flex: 1;
+            max-width: 45%;
+            text-align: center;
+            position: relative;
+        }
+
+        .company-signature {
+            font-weight: bold;
+            color: #C91F1F;
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') + 1 %>px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .signature-title {
+            font-size: <%= getFontSize(exportSettings.fontSize, 'body') - 1 %>px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .signature-image {
+            position: absolute;
+            top: -40px;
+            right: 20px;
+            transform: rotate(<%= Math.floor(Math.random() * 21) - 10 %>deg);
+            opacity: 0.8;
+            <% if (exportSettings.includeSignature) { %>
+            background-image: url('/images/eurotech-signature.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 120px;
+            height: 60px;
+            <% } %>
+        }
+
+        .stamp-image {
+            position: absolute;
+            bottom: 10px;
+            right: 40px;
+            transform: rotate(<%= Math.floor(Math.random() * 11) - 5 %>deg);
+            opacity: 0.7;
+            <% if (exportSettings.includeSignature) { %>
+            background-image: url('/images/eurotech-stamp.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 80px;
+            height: 80px;
+            <% } %>
+        }
+
+        /* QR Code */
+        .qr-section {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            <% if (!exportSettings.includeQR) { %>
+            display: none;
+            <% } %>
+        }
+
+        .qr-code {
+            width: <%= exportSettings.qrSize || 100 %>px;
+            height: <%= exportSettings.qrSize || 100 %>px;
+            border: 2px solid #C91F1F;
+            border-radius: 5px;
+            padding: 5px;
+            background: white;
+        }
+
+        .qr-text {
+            text-align: center;
+            font-size: 8px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Print Specific Styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+            
+            .page-break-avoid {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .quotation-info {
+                display: block;
+            }
+            
+            .info-row {
+                display: block;
+                margin-bottom: 10px;
+            }
+            
+            .info-cell {
+                display: block;
+                width: 100%;
+            }
+            
+            .client-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .signature-section {
+                flex-direction: column;
+                align-items: center;
+                gap: 30px;
+            }
+            
+            .warranty-info,
+            .signature-area {
+                max-width: 100%;
+            }
+        }
+
+        /* Helper function styles */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
+        .color-primary { color: #C91F1F; }
+        .mb-20 { margin-bottom: 20px; }
+        .mt-20 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <!-- Letterhead Container -->
+    <div class="letterhead-container">
+        <% if (exportSettings.letterhead === 'eurotech' && exportSettings.paperType !== 'letterhead-paper') { %>
+        <!-- Letterhead background image is applied via CSS -->
+        <% } %>
+    </div>
+
+    <div class="letterhead-overlay">
+        <!-- Quotation Header -->
+        <div class="quotation-header">
+            <div class="quotation-title">
+                <% if (exportSettings.letterhead === 'eurotech') { %>
+                QUOTATION FOR WATERPROOFING SERVICES
+                <% } else { %>
+                QUOTATION FOR WATERPROOFING
+                <% } %>
+            </div>
+            
+            <% if (exportSettings.paperType === 'letterhead-paper' || exportSettings.letterhead === 'plain') { %>
+            <div class="company-info">
+                <strong>International Pipes Technology Co LLC</strong><br>
+                VAT NO: OM1100077623 | CR NO: 2231867<br>
+                Phone: +968 96030210 | Email: eurotechoman.iptc@gmail.com
+            </div>
+            <% } %>
+        </div>
+
+        <!-- Quotation Information -->
+        <div class="quotation-info">
+            <div class="info-row">
+                <div class="info-cell info-label">Quotation No:</div>
+                <div class="info-cell info-value"><%= quotation.quotation_no %></div>
+                <div class="info-cell info-label">Date:</div>
+                <div class="info-cell info-value"><%= new Date(quotation.tdate).toLocaleDateString('en-GB') %></div>
+            </div>
+            <% if (quotation.ref_no) { %>
+            <div class="info-row">
+                <div class="info-cell info-label">Reference No:</div>
+                <div class="info-cell info-value"><%= quotation.ref_no %></div>
+                <div class="info-cell info-label">Ref Date:</div>
+                <div class="info-cell info-value"><%= quotation.ref_date ? new Date(quotation.ref_date).toLocaleDateString('en-GB') : 'N/A' %></div>
+            </div>
+            <% } %>
+        </div>
+
+        <!-- Client Information -->
+        <div class="client-section">
+            <div class="section-title">CLIENT INFORMATION</div>
+            <div class="client-grid">
+                <div class="client-info">
+                    <h4>Primary Client</h4>
+                    <p><strong>Name:</strong> <%= quotation.client_name || 'N/A' %></p>
+                    <p><strong>Phone:</strong> <%= quotation.client_phone || 'N/A' %></p>
+                    <% if (quotation.project_location) { %>
+                    <p><strong>Location:</strong> <%= quotation.project_location %></p>
+                    <% } %>
+                </div>
+                
+                <div class="client-info">
+                    <% if (quotation.contractor_name) { %>
+                    <h4>Contractor</h4>
+                    <p><strong>Name:</strong> <%= quotation.contractor_name %></p>
+                    <p><strong>Phone:</strong> <%= quotation.contractor_phone || 'N/A' %></p>
+                    <% } else if (quotation.engineer_name) { %>
+                    <h4>Engineer</h4>
+                    <p><strong>Name:</strong> <%= quotation.engineer_name %></p>
+                    <p><strong>Phone:</strong> <%= quotation.engineer_phone || 'N/A' %></p>
+                    <% } else { %>
+                    <h4>Additional Info</h4>
+                    <p><em>No additional contact information</em></p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Section -->
+        <% if (items && items.length > 0) { %>
+        <div class="items-section">
+            <div class="section-title">QUOTATION ITEMS</div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">SL</th>
+                        <th style="width: 45%;">Description</th>
+                        <th style="width: 10%;">Qty</th>
+                        <th style="width: 10%;">Unit</th>
+                        <th style="width: 13%;">Rate (OMR)</th>
+                        <th style="width: 14%;">Amount (OMR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% items.forEach((item, index) => { %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><%= item.description %></td>
+                        <td><%= parseFloat(item.qty).toFixed(3) %></td>
+                        <td><%= item.unit %></td>
+                        <td><%= parseFloat(item.rate).toFixed(3) %></td>
+                        <td><%= parseFloat(item.amount).toFixed(3) %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+
+            <!-- Summary -->
+            <table class="summary-table">
+                <tr>
+                    <td class="summary-label">Total Amount:</td>
+                    <td class="summary-value">OMR <%= parseFloat(quotation.total_amount).toFixed(3) %></td>
+                </tr>
+                <% if (parseFloat(quotation.discount) > 0) { %>
+                <tr>
+                    <td class="summary-label">Discount:</td>
+                    <td class="summary-value">OMR <%= parseFloat(quotation.discount).toFixed(3) %></td>
+                </tr>
+                <% } %>
+                <tr>
+                    <td class="summary-label">VAT (<%= quotation.vat_rate %>%):</td>
+                    <td class="summary-value">OMR <%= parseFloat(quotation.vat_amount).toFixed(3) %></td>
+                </tr>
+                <% if (parseFloat(quotation.round_off) !== 0) { %>
+                <tr>
+                    <td class="summary-label">Round Off:</td>
+                    <td class="summary-value">OMR <%= parseFloat(quotation.round_off).toFixed(3) %></td>
+                </tr>
+                <% } %>
+                <tr>
+                    <td class="summary-label grand-total">Grand Total:</td>
+                    <td class="summary-value grand-total">OMR <%= parseFloat(quotation.grand_total).toFixed(3) %></td>
+                </tr>
+            </table>
+        </div>
+        <% } %>
+
+        <!-- Scope of Work -->
+        <% if (scope && scope.length > 0 && scope.some(item => item && item.trim())) { %>
+        <div class="content-section scope-section">
+            <h3>SCOPE OF WORK</h3>
+            <ol class="content-list">
+                <% scope.forEach(item => { 
+                    if (item && item.trim()) { %>
+                <li><%= item %></li>
+                <% } }) %>
+            </ol>
+        </div>
+        <% } %>
+
+        <!-- Materials -->
+        <% if (materials && materials.length > 0 && materials.some(item => item && item.trim())) { %>
+        <div class="content-section materials-section">
+            <h3>MATERIALS</h3>
+            <ol class="content-list">
+                <% materials.forEach(item => { 
+                    if (item && item.trim()) { %>
+                <li><%= item %></li>
+                <% } }) %>
+            </ol>
+        </div>
+        <% } %>
+
+        <!-- Terms & Conditions -->
+        <% if (terms && terms.length > 0 && terms.some(item => item && item.trim())) { %>
+        <div class="content-section terms-section">
+            <h3>TERMS & CONDITIONS</h3>
+            <ol class="content-list">
+                <% terms.forEach(item => { 
+                    if (item && item.trim()) { %>
+                <li><%= item %></li>
+                <% } }) %>
+            </ol>
+        </div>
+        <% } %>
+
+        <!-- Warranty Section -->
+        <div class="warranty-section">
+            <div class="warranty-title">WARRANTY</div>
+            <div class="warranty-text"><%= quotation.warranty %> YEARS WARRANTY</div>
+            <% if (quotation.warranty_note) { %>
+            <div class="warranty-note"><%= quotation.warranty_note %></div>
+            <% } %>
+        </div>
+
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="warranty-info">
+                <div class="warranty-title">WARRANTY TERMS</div>
+                <p style="text-align: left; font-size: <%= getFontSize(exportSettings.fontSize, 'body') - 1 %>px;">
+                    We guarantee our workmanship for <%= quotation.warranty %> years from the date of completion. 
+                    This warranty covers any defects in materials and workmanship under normal usage conditions.
+                </p>
+            </div>
+            
+            <div class="signature-area">
+                <div class="company-signature">INTERNATIONAL PIPES TECHNOLOGY</div>
+                <div class="signature-title">Authorized Signatory</div>
+                
+                <% if (exportSettings.includeSignature) { %>
+                <div class="signature-image"></div>
+                <div class="stamp-image"></div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code -->
+    <% if (exportSettings.includeQR && qrCodeDataURL) { %>
+    <div class="qr-section">
+        <img src="<%= qrCodeDataURL %>" alt="QR Code" class="qr-code">
+        <div class="qr-text">Scan for digital copy</div>
+    </div>
+    <% } %>
+
+    <script>
+        // Helper function for font sizes (used in EJS template)
+        function getFontSize(sizeCategory, type) {
+            const sizes = {
+                small: { header: 24, body: 12, table: 10 },
+                medium: { header: 28, body: 14, table: 12 },
+                large: { header: 32, body: 16, table: 14 }
+            };
+            
+            return sizes[sizeCategory] ? sizes[sizeCategory][type] : sizes.medium[type];
+        }
+    </script>
+</body>
+</html>

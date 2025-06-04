@@ -4,34 +4,28 @@ const router = express.Router();
 const db = require('../models/db');
 const ExportUtilsEnhanced = require('../utils/exportUtilsEnhanced');
 const path = require('path');
+const puppeteer = require('puppeteer');
+const QRCode = require('qrcode');
+const ExcelJS = require('exceljs');
+const sharp = require('sharp');
 
 // 🔥 ENHANCED EXPORT INTERFACE
 router.get('/quotations/export-enhanced/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
-    const quotationId = req.params.id;
-
-    // Get quotation with client details
-    const quotationData = await getQuotationData(quotationId);
+    const quotationData = await getQuotationData(req.params.id);
     if (!quotationData) {
       return res.status(404).send('Quotation not found');
     }
 
-    const { quotation, items, scope, materials, terms } = quotationData;
-
-    res.render('quotation-export-enhanced', { 
-      quotation, 
-      items, 
-      scope, 
-      materials, 
-      terms,
-      user: req.session.user 
+    res.render('quotation-export-enhanced', {
+      ...quotationData,
+      user: req.session.user
     });
-
-  } catch (err) {
-    console.error('❌ Enhanced export interface error:', err);
-    res.status(500).send('Error loading enhanced export interface');
+  } catch (error) {
+    console.error('Export interface error:', error);
+    res.status(500).send('Error loading export interface');
   }
 });
 
@@ -40,50 +34,40 @@ router.post('/quotations/export/:id/preview', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
-    const quotationId = req.params.id;
-    const exportSettings = parseExportSettings(req.body);
-
-    console.log('🔍 Generating enhanced preview for quotation:', quotationId);
-    console.log('📋 Settings:', exportSettings);
-
-    // Get quotation data
-    const quotationData = await getQuotationData(quotationId);
+    const quotationData = await getQuotationData(req.params.id);
     if (!quotationData) {
       return res.status(404).send('Quotation not found');
     }
 
-    const { quotation, items, scope, materials, terms } = quotationData;
+    const exportSettings = parseExportSettings(req.body);
 
     // Generate QR Code if enabled
     let qrCodeDataURL = null;
     if (exportSettings.includeQR) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      qrCodeDataURL = await ExportUtilsEnhanced.generateQRCode(quotationId, baseUrl, {
-        size: exportSettings.qrSize || 120,
-        quality: 0.9
+      qrCodeDataURL = await ExportUtilsEnhanced.generateQRCode(req.params.id, baseUrl, {
+        size: exportSettings.qrSize,
+        quality: 0.92
       });
     }
 
-    // Render enhanced preview template
     res.render('quotation-export-view-enhanced', {
-      quotation,
-      items,
-      scope,
-      materials,
-      terms,
+      ...quotationData,
       exportSettings,
-      qrCodeDataURL
+      qrCodeDataURL,
+      formatCurrency: (value) => parseFloat(value || 0).toFixed(3),
+      getFontSize: (sizeCategory, type) => {
+        const sizes = {
+          small: { header: 24, body: 12, table: 10 },
+          medium: { header: 28, body: 14, table: 12 },
+          large: { header: 32, body: 16, table: 14 }
+        };
+        return sizes[sizeCategory] ? sizes[sizeCategory][type] : sizes.medium[type];
+      }
     });
-
   } catch (error) {
-    console.error('❌ Enhanced preview generation failed:', error);
-    res.status(500).send(`
-      <div style="padding: 50px; text-align: center; color: #dc3545;">
-        <h3><i class="fas fa-exclamation-triangle"></i> Preview Generation Failed</h3>
-        <p>Please check your settings and try again.</p>
-        <small>${error.message}</small>
-      </div>
-    `);
+    console.error('Preview generation error:', error);
+    res.status(500).send('Preview generation failed');
   }
 });
 
@@ -92,74 +76,167 @@ router.post('/quotations/export/:id/pdf', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
-    const quotationId = req.params.id;
-    const exportSettings = parseExportSettings(req.body);
-
-    console.log('🚀 Starting enhanced PDF export for quotation:', quotationId);
-
-    // Get quotation data
-    const quotationData = await getQuotationData(quotationId);
+    const quotationData = await getQuotationData(req.params.id);
     if (!quotationData) {
-      return res.status(404).json({ success: false, error: 'Quotation not found' });
+      return res.status(404).json({ error: 'Quotation not found' });
     }
 
-    const { quotation, items, scope, materials, terms } = quotationData;
+    const exportSettings = parseExportSettings(req.body);
 
     // Generate QR Code if enabled
     let qrCodeDataURL = null;
     if (exportSettings.includeQR) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      qrCodeDataURL = await ExportUtilsEnhanced.generateAdvancedQRCode(quotationId, baseUrl, {
-        size: exportSettings.qrSize || 120,
-        quality: exportSettings.quality === 'high' ? 0.95 : 0.9
+      qrCodeDataURL = await ExportUtilsEnhanced.generateQRCode(req.params.id, baseUrl, {
+        size: exportSettings.qrSize,
+        quality: 0.92
       });
     }
 
-    // Render HTML content
-    const htmlContent = await new Promise((resolve, reject) => {
-      res.app.render('quotation-export-view-enhanced', {
-        quotation,
-        items,
-        scope,
-        materials,
-        terms,
+    // Generate HTML content
+    const html = await new Promise((resolve, reject) => {
+      res.render('quotation-export-view-enhanced', {
+        ...quotationData,
         exportSettings,
-        qrCodeDataURL
+        qrCodeDataURL,
+        formatCurrency: (value) => parseFloat(value || 0).toFixed(3),
+        getFontSize: (sizeCategory, type) => {
+          const sizes = {
+            small: { header: 24, body: 12, table: 10 },
+            medium: { header: 28, body: 14, table: 12 },
+            large: { header: 32, body: 16, table: 14 }
+          };
+          return sizes[sizeCategory] ? sizes[sizeCategory][type] : sizes.medium[type];
+        }
       }, (err, html) => {
         if (err) reject(err);
         else resolve(html);
       });
     });
 
-    // Generate enhanced PDF
-    const pdfBuffer = await ExportUtilsEnhanced.generateMultiPagePDF(htmlContent, {
-      paperSize: exportSettings.paperSize,
-      orientation: exportSettings.orientation,
-      marginTop: exportSettings.marginTop || '20mm',
-      marginRight: exportSettings.marginRight || '15mm',
-      marginBottom: exportSettings.marginBottom || '20mm',
-      marginLeft: exportSettings.marginLeft || '15mm',
-      includeHeaderFooter: exportSettings.includeHeaderFooter,
-      watermark: exportSettings.includeWatermark ? 'QUOTATION' : null
+    // Generate PDF
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+      format: exportSettings.paperSize,
+      landscape: exportSettings.orientation === 'landscape',
+      printBackground: true,
+      margin: {
+        top: exportSettings.marginTop,
+        right: exportSettings.marginRight,
+        bottom: exportSettings.marginBottom,
+        left: exportSettings.marginLeft
+      }
     });
 
-    // Generate filename
-    const fileName = ExportUtilsEnhanced.generateAdvancedFileName(quotation, 'pdf', {
-      includeDate: true,
-      includeClient: true,
-      dateFormat: 'YYYY-MM-DD'
-    });
-    
+    await browser.close();
+
+    // Send PDF
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-
-    console.log('✅ Enhanced PDF export completed successfully');
-    res.end(pdfBuffer);
+    res.setHeader('Content-Disposition', `attachment; filename="quotation-${quotationData.quotation.quotation_no}.pdf"`);
+    res.send(pdfBuffer);
 
   } catch (error) {
-    console.error('❌ Enhanced PDF export failed:', error);
-    res.status(500).json({ success: false, error: 'PDF generation failed', details: error.message });
+    console.error('PDF export error:', error);
+    res.status(500).json({ error: 'PDF generation failed' });
+  }
+});
+
+// 🔥 ENHANCED IMAGE EXPORT (PNG/JPG)
+router.post('/quotations/export/:id/:format(png|jpg)', async (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  try {
+    const quotationData = await getQuotationData(req.params.id);
+    if (!quotationData) {
+      return res.status(404).json({ error: 'Quotation not found' });
+    }
+
+    const exportSettings = parseExportSettings(req.body);
+    const format = req.params.format;
+
+    // Generate QR Code if enabled
+    let qrCodeDataURL = null;
+    if (exportSettings.includeQR) {
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      qrCodeDataURL = await ExportUtilsEnhanced.generateQRCode(req.params.id, baseUrl, {
+        size: exportSettings.qrSize,
+        quality: 0.92
+      });
+    }
+
+    // Generate HTML content
+    const html = await new Promise((resolve, reject) => {
+      res.render('quotation-export-view-enhanced', {
+        ...quotationData,
+        exportSettings,
+        qrCodeDataURL,
+        formatCurrency: (value) => parseFloat(value || 0).toFixed(3),
+        getFontSize: (sizeCategory, type) => {
+          const sizes = {
+            small: { header: 24, body: 12, table: 10 },
+            medium: { header: 28, body: 14, table: 12 },
+            large: { header: 32, body: 16, table: 14 }
+          };
+          return sizes[sizeCategory] ? sizes[sizeCategory][type] : sizes.medium[type];
+        }
+      }, (err, html) => {
+        if (err) reject(err);
+        else resolve(html);
+      });
+    });
+
+    // Generate image
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    // Set viewport size based on paper size
+    const paperSizes = {
+      'A4': { width: 2480, height: 3508 },
+      'A3': { width: 3508, height: 4961 },
+      'Letter': { width: 2550, height: 3300 }
+    };
+    const viewport = paperSizes[exportSettings.paperSize] || paperSizes['A4'];
+    if (exportSettings.orientation === 'landscape') {
+      [viewport.width, viewport.height] = [viewport.height, viewport.width];
+    }
+    await page.setViewport(viewport);
+
+    // Capture screenshot
+    const screenshot = await page.screenshot({
+      type: format,
+      fullPage: true,
+      quality: format === 'jpg' ? 90 : undefined
+    });
+
+    await browser.close();
+
+    // Optimize image if needed
+    const optimizedBuffer = await sharp(screenshot)
+      .resize(viewport.width, null, { fit: 'contain' })
+      [format === 'png' ? 'png' : 'jpeg']({
+        quality: 90,
+        progressive: true
+      })
+      .toBuffer();
+
+    // Send image
+    res.setHeader('Content-Type', `image/${format}`);
+    res.setHeader('Content-Disposition', `attachment; filename="quotation-${quotationData.quotation.quotation_no}.${format}"`);
+    res.send(optimizedBuffer);
+
+  } catch (error) {
+    console.error('Image export error:', error);
+    res.status(500).json({ error: 'Image generation failed' });
   }
 });
 
@@ -219,165 +296,112 @@ router.post('/quotations/export/:id/excel', async (req, res) => {
   }
 });
 
-// 🔥 ENHANCED IMAGE EXPORT (PNG/JPG)
-router.post('/quotations/export/:id/:format(png|jpg|jpeg)', async (req, res) => {
+// 🔥 ENHANCED WHATSAPP EXPORT
+router.post('/quotations/export/:id/whatsapp', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
 
   try {
-    const quotationId = req.params.id;
-    const imageFormat = req.params.format;
-    const exportSettings = parseExportSettings(req.body);
-
-    console.log(`🚀 Starting enhanced ${imageFormat.toUpperCase()} export for quotation:`, quotationId);
-
-    // Get quotation data
-    const quotationData = await getQuotationData(quotationId);
+    const quotationData = await getQuotationData(req.params.id);
     if (!quotationData) {
-      return res.status(404).json({ success: false, error: 'Quotation not found' });
+      return res.status(404).json({ error: 'Quotation not found' });
     }
 
-    const { quotation, items, scope, materials, terms } = quotationData;
+    const { quotation } = quotationData;
+    const message = `*Quotation #${quotation.quotation_no}*\n\n` +
+      `Dear ${quotation.client_name},\n\n` +
+      `Please find your quotation details below:\n\n` +
+      `Project: ${quotation.project_name}\n` +
+      `Amount: OMR ${parseFloat(quotation.grand_total).toFixed(3)}\n` +
+      `Validity: ${quotation.validity_period} days\n\n` +
+      `Thank you for your business!\n` +
+      `International Pipes Technology Co LLC`;
 
-    // Generate QR Code if enabled
-    let qrCodeDataURL = null;
-    if (exportSettings.includeQR) {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      qrCodeDataURL = await ExportUtilsEnhanced.generateAdvancedQRCode(quotationId, baseUrl, {
-        size: exportSettings.qrSize || 120
-      });
-    }
-
-    // Render HTML content
-    const htmlContent = await new Promise((resolve, reject) => {
-      res.app.render('quotation-export-view-enhanced', {
-        quotation,
-        items,
-        scope,
-        materials,
-        terms,
-        exportSettings: { ...exportSettings, imageFormat },
-        qrCodeDataURL
-      }, (err, html) => {
-        if (err) reject(err);
-        else resolve(html);
-      });
-    });
-
-    // Generate high-quality image
-    const imageBuffer = await ExportUtilsEnhanced.generateHighQualityImage(htmlContent, {
-      imageFormat: imageFormat,
-      imageWidth: getImageDimensions(exportSettings.paperSize).width,
-      imageHeight: getImageDimensions(exportSettings.paperSize).height,
-      imageQuality: exportSettings.quality === 'high' ? 95 : 85,
-      highDPI: exportSettings.quality === 'high',
-      optimizeImage: true
-    });
-
-    // Generate filename
-    const fileName = ExportUtilsEnhanced.generateAdvancedFileName(quotation, imageFormat, {
-      includeDate: true,
-      includeClient: true
-    });
-    
-    const mimeType = ExportUtilsEnhanced.getMimeType ? ExportUtilsEnhanced.getMimeType(imageFormat) : `image/${imageFormat}`;
-    
-    res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.setHeader('Content-Length', imageBuffer.length);
-
-    console.log(`✅ Enhanced ${imageFormat.toUpperCase()} export completed successfully`);
-    res.end(imageBuffer);
+    const whatsappUrl = `https://wa.me/${quotation.client_contact}?text=${encodeURIComponent(message)}`;
+    res.json({ success: true, whatsappUrl });
 
   } catch (error) {
-    console.error(`❌ Enhanced image export failed:`, error);
-    res.status(500).json({ success: false, error: 'Image generation failed', details: error.message });
+    console.error('WhatsApp export error:', error);
+    res.status(500).json({ error: 'WhatsApp export failed' });
   }
 });
 
-// 🔥 HELPER FUNCTIONS
+// �� HELPER FUNCTIONS
 
 async function getQuotationData(quotationId) {
   try {
     // Get quotation with client details
-    const [quotationRows] = await db.query(`
-      SELECT 
-        q.*,
-        c.name as client_name, c.phone as client_phone,
-        cont.name as contractor_name, cont.phone as contractor_phone,
-        sub.name as subcontractor_name, sub.phone as subcontractor_phone,
-        eng.name as engineer_name, eng.phone as engineer_phone,
-        att.name as attention_name, att.phone as attention_phone
+    const [quotation] = await db.query(`
+      SELECT q.*, c.name as client_name, c.email as client_email, 
+             c.phone as client_contact, c.address as client_address
       FROM quotations q
       LEFT JOIN clients c ON q.client_id = c.id
-      LEFT JOIN clients cont ON q.contractor_id = cont.id
-      LEFT JOIN clients sub ON q.subcontractor_id = sub.id
-      LEFT JOIN clients eng ON q.engineer_id = eng.id
-      LEFT JOIN clients att ON q.attention_id = att.id
       WHERE q.id = ?
     `, [quotationId]);
 
-    if (quotationRows.length === 0) {
+    if (!quotation || quotation.length === 0) {
       return null;
     }
 
-    const quotation = quotationRows[0];
+    // Get quotation items
+    const [items] = await db.query(`
+      SELECT qi.*, u.name as unit
+      FROM quotation_items qi
+      LEFT JOIN units u ON qi.unit_id = u.id
+      WHERE qi.quotation_id = ?
+      ORDER BY qi.item_order
+    `, [quotationId]);
 
-    // Get related data
-    const [itemRows] = await db.query(
-      'SELECT description, qty, unit, rate, amount FROM quotation_item_lines WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
+    // Get scope of work
+    const [scope] = await db.query(`
+      SELECT description
+      FROM quotation_scope
+      WHERE quotation_id = ?
+      ORDER BY item_order
+    `, [quotationId]);
 
-    const [scopeRows] = await db.query(
-      'SELECT scope FROM quotation_scope WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
+    // Get materials
+    const [materials] = await db.query(`
+      SELECT description
+      FROM quotation_materials
+      WHERE quotation_id = ?
+      ORDER BY item_order
+    `, [quotationId]);
 
-    const [materialRows] = await db.query(
-      'SELECT material FROM quotation_materials WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
-
-    const [termRows] = await db.query(
-      'SELECT term FROM quotation_terms WHERE quotation_id = ? ORDER BY id',
-      [quotationId]
-    );
+    // Get terms
+    const [terms] = await db.query(`
+      SELECT description
+      FROM quotation_terms
+      WHERE quotation_id = ?
+      ORDER BY item_order
+    `, [quotationId]);
 
     return {
-      quotation,
-      items: itemRows || [],
-      scope: scopeRows.map(row => row.scope) || [],
-      materials: materialRows.map(row => row.material) || [],
-      terms: termRows.map(row => row.term) || []
+      quotation: quotation[0],
+      items,
+      scope,
+      materials,
+      terms
     };
-
   } catch (error) {
-    console.error('❌ Error fetching quotation data:', error);
+    console.error('Error fetching quotation data:', error);
     throw error;
   }
 }
 
 function parseExportSettings(body) {
   return {
-    method: body.method || 'digital',
-    paperType: body.paperType || 'plain',
-    letterhead: body.letterhead || 'plain',
-    format: body.format || 'pdf',
     paperSize: body.paperSize || 'A4',
     orientation: body.orientation || 'portrait',
-    quality: body.quality || 'medium',
     fontSize: body.fontSize || 'medium',
-    includeSignature: body.includeSignature === 'true',
-    includeQR: body.includeQR === 'true',
-    includeWatermark: body.includeWatermark === 'true',
-    delivery: body.delivery || 'download',
-    
-    // Advanced settings
+    quality: body.quality || 'standard',
+    letterhead: body.letterhead || 'professional',
+    includeQR: body.includeQR === 'on',
+    includeWatermark: body.includeWatermark === 'on',
     marginTop: body.marginTop || '20mm',
     marginRight: body.marginRight || '15mm',
     marginBottom: body.marginBottom || '20mm',
     marginLeft: body.marginLeft || '15mm',
-    includeHeaderFooter: body.includeHeaderFooter === 'true',
+    includeHeaderFooter: body.includeHeaderFooter === 'on',
     qrSize: parseInt(body.qrSize) || 120
   };
 }
@@ -397,17 +421,6 @@ function getCustomHeader(exportSettings) {
     return 'QUOTATION FOR WATERPROOFING SERVICES';
   }
   return 'QUOTATION FOR WATERPROOFING';
-}
-
-function getImageDimensions(paperSize) {
-  const dimensions = {
-    'A4': { width: 1240, height: 1754 },
-    'A3': { width: 1754, height: 2480 },
-    'Letter': { width: 1275, height: 1650 },
-    'Legal': { width: 1275, height: 2100 }
-  };
-  
-  return dimensions[paperSize] || dimensions.A4;
 }
 
 module.exports = router;
